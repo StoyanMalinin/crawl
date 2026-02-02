@@ -6,23 +6,29 @@ LDFLAGS = -lX11 -lGL -lpthread -lpng -lstdc++fs
 # Target executable
 TARGET = crawl
 
+# Directories
+SRC_DIR = src
+OUT_DIR = out
+
 # Source files (add more .cpp files here as needed)
-# SOURCES = main.cpp
-# Or automatically find all .cpp files:
-SOURCES = $(wildcard *.cpp)
+SOURCES = $(wildcard $(SRC_DIR)/*.cpp)
 
 # Object files
-OBJECTS = $(SOURCES:.cpp=.o)
+OBJECTS = $(patsubst $(SRC_DIR)/%.cpp,$(OUT_DIR)/%.o,$(SOURCES))
 
 # Default target
-all: $(TARGET)
+all: $(OUT_DIR) $(TARGET)
+
+# Create output directory
+$(OUT_DIR):
+	mkdir -p $(OUT_DIR)
 
 # Link the executable
 $(TARGET): $(OBJECTS)
 	$(CXX) $(OBJECTS) -o $(TARGET) $(LDFLAGS)
 
 # Compile source files to object files
-%.o: %.cpp
+$(OUT_DIR)/%.o: $(SRC_DIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -Wno-all -Wno-extra -c $< -o $@
 
 # Run the program
@@ -31,7 +37,7 @@ run: $(TARGET)
 
 # Clean build artifacts
 clean:
-	rm -f $(OBJECTS) $(TARGET)
+	rm -rf $(OUT_DIR) $(TARGET)
 
 # Rebuild everything
 rebuild: clean all
