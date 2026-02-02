@@ -45,8 +45,8 @@ public:
 		tv.SetWorldOffset(worldOffset);
 		tv.SetWorldScale({ScreenWidth() / worldSize.x, ScreenHeight() / worldSize.y});
 
-		int lChunkID = Chunk::yPositionToChunkID(worldOffset.y);
-		int rChunkID = Chunk::yPositionToChunkID(worldOffset.y - worldSize.y);
+		int lChunkID = Chunk::yPositionToChunkID(worldOffset.y + 10.0f);
+		int rChunkID = Chunk::yPositionToChunkID(worldOffset.y - worldSize.y - 10.0f);
 
 		Clear(olc::WHITE);
 		for (int chunkID = lChunkID; chunkID <= rChunkID; chunkID++) {
