@@ -13,16 +13,18 @@
 #include "chunk.h"
 #include <chrono>
 #include <iostream>
+#include "assets.h"
 
 class Crawl : public olc::PixelGameEngine
 {
 public:
-	Crawl()
+	Crawl() : assets("assets")
 	{
 		sAppName = "Crawl";
 	}
 
 private:
+	Assets assets;
 	olc::vf2d worldOffset = {0.0f, 0.0f};
 	const olc::vf2d worldSize = {Chunk::chunkWidth, Chunk::chunkHeight};
 public:
@@ -46,17 +48,29 @@ public:
 		int lChunkID = Chunk::yPositionToChunkID(worldOffset.y);
 		int rChunkID = Chunk::yPositionToChunkID(worldOffset.y - worldSize.y);
 
-		Clear(olc::BLACK);
+		Clear(olc::WHITE);
 		for (int chunkID = lChunkID; chunkID <= rChunkID; chunkID++) {
 			Chunk chunk(chunkID);
 			chunk.initialize();
 
 			olc::vf2d offset = Chunk::chunkIDToOffset(chunkID);
-			for (int x = 0; x < Chunk::chunkSizeX; x++)
-				for (int y = 0; y < Chunk::chunkSizeY; y++)
-					tv.FillRect(offset.x + x * Chunk::blockSizeX, offset.y + y * Chunk::blockSizeY, 
-						Chunk::blockSizeX + 0.1f, Chunk::blockSizeY + 0.1f, 
-						chunk.getMap(x, y) ? olc::BLACK : olc::WHITE);
+			for (int x = 0; x < Chunk::chunkSizeX; x++) {
+				for (int y = 0; y < Chunk::chunkSizeY; y++) {
+					olc::Decal *decal = chunk.getMap(x, y) ? 
+						assets.getDecal("wall.png") : 
+						assets.getDecal("background.png");
+					olc::vf2d scale = {
+						Chunk::blockSizeX / decal->sprite->width,
+						Chunk::blockSizeY / decal->sprite->height
+					};
+
+					tv.DrawDecal(
+						offset + olc::vf2d(x * Chunk::blockSizeX, y * Chunk::blockSizeY),
+						decal,
+						scale
+					);
+				}
+			}
 		}
 
 		return true;
