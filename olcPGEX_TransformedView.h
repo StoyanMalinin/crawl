@@ -347,16 +347,21 @@ namespace olc
 		return m_vWorldScale;
 	}
 
+	// WorldToScreen and ScreenToWorld are modified (by me) to take account of inverted Y axis in screen space
+
 	olc::vf2d TransformedView::WorldToScreen(const olc::vf2d& vWorldPos) const
 	{
 		olc::vf2d vFloat = ((vWorldPos - m_vWorldOffset) * m_vWorldScale);
+		vFloat.y = m_vViewArea.y - vFloat.y;
 		//vFloat = { std::floor(vFloat.x + 0.5f), std::floor(vFloat.y + 0.5f) };
 		return vFloat;
 	}
 
 	olc::vf2d TransformedView::ScreenToWorld(const olc::vf2d& vScreenPos) const
 	{
-		return (olc::vf2d(vScreenPos) / m_vWorldScale) + m_vWorldOffset;
+		olc::vf2d vAdjusted = vScreenPos;
+		vAdjusted.y = m_vViewArea.y - vAdjusted.y;
+		return (vAdjusted / m_vWorldScale) + m_vWorldOffset;
 	}
 
 	olc::vf2d TransformedView::ScaleToWorld(const olc::vf2d& vScreenSize) const
