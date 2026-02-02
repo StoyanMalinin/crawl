@@ -12,8 +12,8 @@ int Random::getInt(int min, int max) {
     return dist(rnd);
 }
 
-bool Random::getPercentChance(double percent) {
-    std::bernoulli_distribution dist(percent / 100.0);
+bool Random::getChance(double c) {
+    std::bernoulli_distribution dist(c);
     return dist(rnd);
 }
 
