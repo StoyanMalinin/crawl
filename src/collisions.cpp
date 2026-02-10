@@ -1,4 +1,6 @@
 #include "collisions.h"
+#include "olcPixelGameEngine.h"
+#include "olcPGEX_TransformedView.h"
 
 #include <string>
 
@@ -10,9 +12,10 @@ bool Collisions::checkCollision(const AlignedBoxCollider &a, const AlignedBoxCol
     return xOverlap && yOverlap;
 }
 
-bool Collisions::checkCollision(const Chunk &chunk, const Player &player) {
+bool Collisions::checkCollision(const Chunk &chunk, const Player &player, olc::TransformedView tv) {
     const olc::vf2d chunkOffset = chunk.getOffset();
     const AlignedBoxCollider playerCollider = player.getCollider();
+    playerCollider.debugDraw(tv, olc::GREEN);
 
     for (int x = 0; x < Chunk::chunkSizeX; x++) {
         for (int y = 0; y < Chunk::chunkSizeY; y++) {
@@ -24,6 +27,7 @@ bool Collisions::checkCollision(const Chunk &chunk, const Player &player) {
                 Chunk::blockSizeX,
                 Chunk::blockSizeY
             );
+            blockCollider.debugDraw(tv, olc::RED);
 
             if (checkCollision(playerCollider, blockCollider)) {
                 return true;

@@ -1,5 +1,5 @@
 #include "player.h"
 
 AlignedBoxCollider Player::getCollider() const {
-    return AlignedBoxCollider(x, y, width, height);
+    return AlignedBoxCollider(position.x, position.y, width, height);
 }

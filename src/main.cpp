@@ -14,41 +14,119 @@
 #include <chrono>
 #include <iostream>
 #include "assets.h"
+#include "player.h"
+#include "collisions.h"
 
 class Crawl : public olc::PixelGameEngine
 {
 public:
-	Crawl() : assets("assets") {
+	Crawl() : assets("assets"), player(50.0f, 0.0f) {
 		sAppName = "Crawl";
 	}
 
 private:
+	Player player;
 	Assets assets;
 	olc::vf2d worldOffset = {0.0f, 0.0f};
 	const olc::vf2d worldSize = {Chunk::chunkWidth, Chunk::chunkHeight};
+
+	// Layer 0 is the default layer, drawn on top (lowest index = rendered last)
+	// Game layer has higher index, so it's rendered behind layer 0
+	uint8_t gameLayer;
+	const uint8_t debugLayer = 0; // Use layer 0 for debug (on top)
 public:
-	bool OnUserCreate() override {		
+	bool OnUserCreate() override {	
+		// Create game layer - higher index means drawn behind
+		gameLayer = CreateLayer();
+		EnableLayer(gameLayer, true);
+		
 		return true;
 	}
 
 	bool OnUserUpdate(float elapsedTime) override {
+		SetDrawTarget(debugLayer);
+		SetPixelMode(olc::Pixel::Mode::ALPHA);
+		Clear(olc::BLANK);
+		update(elapsedTime);
+		
+		SetDrawTarget(gameLayer);
+		SetPixelMode(olc::Pixel::Mode::NORMAL);
+		Clear(olc::BLACK);
+		draw();
+
+		return true;
+	}
+
+	void update(float elapsedTime) {
+		worldOffset.y = player.position.y - worldSize.y / 2.0f;
+
+		olc::vf2d playerPositionBackup = player.position;
 		if (GetKey(olc::Key::UP).bHeld) {
-			worldOffset.y += 100.0f * elapsedTime;
+			player.position.y += 100.0f * elapsedTime;
 		}
 		if (GetKey(olc::Key::DOWN).bHeld) {
-			worldOffset.y -= 100.0f * elapsedTime;
+			player.position.y -= 100.0f * elapsedTime;
 		}
-		
+		if (GetKey(olc::Key::LEFT).bHeld) {
+			player.position.x -= 100.0f * elapsedTime;
+		}
+		if (GetKey(olc::Key::RIGHT).bHeld) {
+			player.position.x += 100.0f * elapsedTime;
+		}
+		if (checkPlayerCollisions()) {
+			player.position = playerPositionBackup;
+		}
+	}
+
+	// TODO: Think about optimizations here:
+	// - Maybe introduce a "chunk cache" that stores the chunks that are currently visible, so we don't have to initialize them every frame
+	// - Maybe introduce some space partitioning structure to quickly rule out chunk blocks that are far away from the player
+	bool checkPlayerCollisions() {
+		int64_t lChunkID = Chunk::yPositionToChunkID(worldOffset.y + 10.0f);
+		int64_t rChunkID = Chunk::yPositionToChunkID(worldOffset.y - worldSize.y - 10.0f);
+		for (int64_t chunkID = lChunkID; chunkID <= rChunkID; chunkID++) {
+			Chunk chunk(chunkID);
+			chunk.initialize();
+
+			olc::TransformedView tv = createTransformedView();
+			if (Collisions::checkCollision(chunk, player, tv)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	olc::TransformedView createTransformedView() {
 		olc::TransformedView tv;
 		tv.Initialise({ ScreenWidth(), ScreenHeight() });
 		tv.SetWorldOffset(worldOffset);
 		tv.SetWorldScale({ScreenWidth() / worldSize.x, ScreenHeight() / worldSize.y});
+		return tv;
+	}
 
-		int lChunkID = Chunk::yPositionToChunkID(worldOffset.y + 10.0f);
-		int rChunkID = Chunk::yPositionToChunkID(worldOffset.y - worldSize.y - 10.0f);
+	void draw() {
+		olc::TransformedView tv = createTransformedView();
+		
+		// The order is important here, as the player needs to be drawn on top of the chunks
+		drawChunks(tv);
+		drawPlayer(tv);
+	}
 
-		Clear(olc::WHITE);
-		for (int chunkID = lChunkID; chunkID <= rChunkID; chunkID++) {
+	void drawPlayer(olc::TransformedView& tv) {
+		olc::Decal *decal = assets.getDecal("wizzard.png");
+		olc::vf2d scale = {
+			Player::width / decal->sprite->width,
+			Player::height / decal->sprite->height
+		};
+
+		tv.DrawDecal(player.position + olc::vf2d(0, Player::height), decal, scale);
+	}
+
+	void drawChunks(olc::TransformedView& tv) {		
+		int64_t lChunkID = Chunk::yPositionToChunkID(worldOffset.y + 10.0f);
+		int64_t rChunkID = Chunk::yPositionToChunkID(worldOffset.y - worldSize.y - 10.0f);
+		for (int64_t chunkID = lChunkID; chunkID <= rChunkID; chunkID++) {
 			Chunk chunk(chunkID);
 			chunk.initialize();
 
@@ -64,15 +142,13 @@ public:
 					};
 
 					tv.DrawDecal(
-						offset + olc::vf2d(x * Chunk::blockSizeX, y * Chunk::blockSizeY),
+						offset + olc::vf2d(x * Chunk::blockSizeX, y * Chunk::blockSizeY) + olc::vf2d(0, Chunk::blockSizeY), // + olc::vf2d(0, blockSizeY) to draw from bottom-left corner
 						decal,
 						scale
 					);
 				}
 			}
 		}
-
-		return true;
 	}
 };
 
