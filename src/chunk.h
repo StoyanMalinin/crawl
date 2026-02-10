@@ -1,3 +1,5 @@
+#pragma once
+
 #include "olcPixelGameEngine.h"
 
 class Chunk {
@@ -21,7 +23,7 @@ public:
     bool getMap(int x, int y) const;
     int getChunkID() const;
     void initialize();
-    olc::vf2d getOffset();    
+    olc::vf2d getOffset() const;    
     static olc::vf2d chunkIDToOffset(int chunkID);
     static int64_t yPositionToChunkID(float yPos);
 

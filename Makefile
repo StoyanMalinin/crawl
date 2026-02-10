@@ -28,7 +28,7 @@ $(TARGET): $(OBJECTS)
 	$(CXX) $(OBJECTS) -o $(TARGET) $(LDFLAGS)
 
 # Compile source files to object files
-$(OUT_DIR)/%.o: $(SRC_DIR)/%.cpp
+$(OUT_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OUT_DIR)
 	$(CXX) $(CXXFLAGS) -Wno-all -Wno-extra -c $< -o $@
 
 # Run the program

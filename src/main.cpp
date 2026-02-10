@@ -18,8 +18,7 @@
 class Crawl : public olc::PixelGameEngine
 {
 public:
-	Crawl() : assets("assets")
-	{
+	Crawl() : assets("assets") {
 		sAppName = "Crawl";
 	}
 

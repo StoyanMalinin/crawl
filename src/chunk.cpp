@@ -66,7 +66,7 @@ void Chunk::initialize() {
     for (int i = 0; i < 4; i++) applyCaveAutomaton();
 }
 
-olc::vf2d Chunk::getOffset() {
+olc::vf2d Chunk::getOffset() const {
     return chunkIDToOffset(chunkID);
 }
 
