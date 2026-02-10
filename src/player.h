@@ -6,11 +6,12 @@
 class Player {
 public:
     olc::vf2d position; // bottom-left corner of the player
-    static constexpr float width = 5.0f;
-    static constexpr float height = 5.0f;
+    olc::vf2d velocity;
+    static constexpr float width = 3.0f;
+    static constexpr float height = 3.0f;
     static constexpr olc::vf2d size = { width, height };
     
-    Player(float x, float y) : position(x, y) {}
+    Player(float x, float y) : position(x, y), velocity(0.0f, 0.0f) {}
 
     AlignedBoxCollider getCollider() const;
 };

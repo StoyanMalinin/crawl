@@ -13,10 +13,12 @@ bool Collisions::checkCollision(const AlignedBoxCollider &a, const AlignedBoxCol
 }
 
 bool Collisions::checkCollision(const Chunk &chunk, const Player &player, olc::TransformedView tv) {
-    const olc::vf2d chunkOffset = chunk.getOffset();
     const AlignedBoxCollider playerCollider = player.getCollider();
-    playerCollider.debugDraw(tv, olc::GREEN);
+    return checkCollision(chunk, playerCollider);
+}
 
+bool Collisions::checkCollision(const Chunk &chunk, const AlignedBoxCollider &collider) {
+    const olc::vf2d chunkOffset = chunk.getOffset();
     for (int x = 0; x < Chunk::chunkSizeX; x++) {
         for (int y = 0; y < Chunk::chunkSizeY; y++) {
             if (!chunk.getMap(x, y)) continue;
@@ -27,9 +29,8 @@ bool Collisions::checkCollision(const Chunk &chunk, const Player &player, olc::T
                 Chunk::blockSizeX,
                 Chunk::blockSizeY
             );
-            blockCollider.debugDraw(tv, olc::RED);
 
-            if (checkCollision(playerCollider, blockCollider)) {
+            if (checkCollision(collider, blockCollider)) {
                 return true;
             }
         }

@@ -16,6 +16,7 @@
 #include "assets.h"
 #include "player.h"
 #include "collisions.h"
+#include "aligned_box_collider.h"
 
 class Crawl : public olc::PixelGameEngine
 {
@@ -29,6 +30,7 @@ private:
 	Assets assets;
 	olc::vf2d worldOffset = {0.0f, 0.0f};
 	const olc::vf2d worldSize = {Chunk::chunkWidth, Chunk::chunkHeight};
+	const olc::vf2d gravity = {0.0f, -60.0f};
 
 	// Layer 0 is the default layer, drawn on top (lowest index = rendered last)
 	// Game layer has higher index, so it's rendered behind layer 0
@@ -60,22 +62,62 @@ public:
 	void update(float elapsedTime) {
 		worldOffset.y = player.position.y - worldSize.y / 2.0f;
 
-		olc::vf2d playerPositionBackup = player.position;
-		if (GetKey(olc::Key::UP).bHeld) {
-			player.position.y += 100.0f * elapsedTime;
-		}
-		if (GetKey(olc::Key::DOWN).bHeld) {
-			player.position.y -= 100.0f * elapsedTime;
+		olc::vf2d playerAbsoluteChange = {0.0f, 0.0f};
+		
+		// Input
+		if (GetKey(olc::Key::UP).bPressed) {
+			if (isPlayerOnGround()) {
+				player.velocity.y += 4000.0f * elapsedTime;
+			}
 		}
 		if (GetKey(olc::Key::LEFT).bHeld) {
-			player.position.x -= 100.0f * elapsedTime;
+			playerAbsoluteChange.x -= 20.0f * elapsedTime;
 		}
 		if (GetKey(olc::Key::RIGHT).bHeld) {
-			player.position.x += 100.0f * elapsedTime;
+			playerAbsoluteChange.x += 20.0f * elapsedTime;
 		}
+
+		olc::vf2d playerVelocity = player.velocity;
+		playerVelocity += gravity * elapsedTime;
+		
+		// Horizontal
+		olc::vf2d playerPositionBackup = player.position;
+		player.position.x += playerVelocity.x * elapsedTime + playerAbsoluteChange.x;
 		if (checkPlayerCollisions()) {
 			player.position = playerPositionBackup;
+			player.velocity.x = 0.0f;
+		} else {
+			player.velocity.x = playerVelocity.x;
 		}
+		
+		// Vertical
+		playerPositionBackup = player.position;
+		player.position.y += playerVelocity.y * elapsedTime + playerAbsoluteChange.y;
+		if (checkPlayerCollisions()) {
+			player.position = playerPositionBackup;
+			player.velocity.y = 0.0f;
+		} else {
+			player.velocity.y = playerVelocity.y;
+		}
+	}
+
+	bool isPlayerOnGround() {
+		AlignedBoxCollider playerGoundCollider = player.getCollider();
+		playerGoundCollider.height = 0.1f; // Check for collisions just below the player
+		playerGoundCollider.y -= 0.1f; // Move the collider down by its height to check for ground contact
+		
+		int64_t lChunkID = Chunk::yPositionToChunkID(worldOffset.y + 10.0f);
+		int64_t rChunkID = Chunk::yPositionToChunkID(worldOffset.y - worldSize.y - 10.0f);
+		for (int64_t chunkID = lChunkID; chunkID <= rChunkID; chunkID++) {
+			Chunk chunk(chunkID);
+			chunk.initialize();
+
+			if (Collisions::checkCollision(chunk, playerGoundCollider)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	// TODO: Think about optimizations here:

@@ -11,4 +11,5 @@ class Collisions {
 public:
     static bool checkCollision(const AlignedBoxCollider& a, const AlignedBoxCollider& b);
     static bool checkCollision(const Chunk& chunk, const Player& player, olc::TransformedView tv);
+    static bool checkCollision(const Chunk& chunk, const AlignedBoxCollider& collider);
 };
