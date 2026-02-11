@@ -105,7 +105,9 @@ public:
 		AlignedBoxCollider playerGoundCollider = player.getCollider();
 		playerGoundCollider.height = 0.1f; // Check for collisions just below the player
 		playerGoundCollider.y -= 0.1f; // Move the collider down by its height to check for ground contact
-		
+		playerGoundCollider.x += 0.1f; // Add a small horizontal tolerance to allow for walking on slopes
+		playerGoundCollider.width -= 0.2f; // Reduce the width by the same amount to keep the collider centered on the player
+
 		int64_t lChunkID = Chunk::yPositionToChunkID(worldOffset.y + 10.0f);
 		int64_t rChunkID = Chunk::yPositionToChunkID(worldOffset.y - worldSize.y - 10.0f);
 		for (int64_t chunkID = lChunkID; chunkID <= rChunkID; chunkID++) {
