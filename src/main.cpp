@@ -85,32 +85,52 @@ public:
 			}
 		}
 
+		std::vector<olc::vf2d> playerAuraPoints;
+		playerAuraPoints.push_back(player.getCenter());
+		for (int i = 0; i < 8; i++) {
+			float angle = i * 3.14159f / 4.0f;
+			playerAuraPoints.push_back(player.getCenter() + olc::vf2d(std::cos(angle), std::sin(angle)) * BallMonster::playerAuraRadius);
+		}
+
+		for (const auto& p: playerAuraPoints) {
+			tv.FillCircle(p, 0.03f, olc::GREEN);
+		}
+
 		// Move existing ball monsters
 		for (auto& [id, ballMonster] : ballMonsters) {
+			tv.DrawCircle(ballMonster.getCenter(), BallMonster::viewRange, olc::RED);
+
 			olc::vf2d dir = player.getCenter() - ballMonster.getCenter();
+			if (dir.mag() > BallMonster::viewRange) continue; // Don't move if player is out of range
 			dir = dir.norm();
 			
 			int64_t lChunkID = Chunk::yPositionToChunkID(ballMonster.position.y + BallMonster::height + BallMonster::viewRange);
 			int64_t rChunkID = Chunk::yPositionToChunkID(ballMonster.position.y - BallMonster::viewRange);
-			
-			int64_t intersectionChunkID = 0;
-			float intersectionTime = std::numeric_limits<float>::max();
-			for (int64_t chunkID = lChunkID; chunkID <= rChunkID; chunkID++) {
-				Chunk chunk(chunkID);
-				chunk.initialize();
 
-				float currIntersectionTime = Collisions::getRayIntersection(ballMonster.getCenter(), dir, chunk);
-				if (currIntersectionTime < intersectionTime) {
-					intersectionTime = currIntersectionTime;
-					intersectionChunkID = chunkID;
-				}
+			std::vector<Chunk> monsterChunks;
+			for (int64_t chunkID = lChunkID; chunkID <= rChunkID; chunkID++) {
+				monsterChunks.emplace_back(chunkID);
+				monsterChunks.back().initialize();
+				monsterChunks.back().debugDraw(tv);
 			}
 			
-			tv.DrawLine(ballMonster.getCenter(), player.getCenter(), olc::RED);
-			if (intersectionTime > dir.mag()) {
-				ballMonster.position += dir.norm() * 10.0f * elapsedTime;
-			} else {
-				tv.FillCircle(ballMonster.getCenter() + dir * intersectionTime, 0.5f, olc::YELLOW);
+			for (const auto& p: playerAuraPoints) {
+				olc::vf2d dir = p - ballMonster.getCenter();
+				
+				float intersectionTime = std::numeric_limits<float>::max();
+				for (const Chunk& chunk : monsterChunks) {
+					float currentIntersection = Collisions::getRayIntersection(ballMonster.getCenter(), dir, chunk);
+					if (currentIntersection < intersectionTime) {
+						intersectionTime = currentIntersection;
+					}
+				}
+				
+				if (intersectionTime >= 1.0f - 0.001f) {
+					tv.DrawLine(ballMonster.getCenter(), p, olc::RED);
+					ballMonster.position += dir.norm() * 10.0f * elapsedTime;
+
+					break;
+				}
 			}
 		}
 	}
@@ -119,20 +139,24 @@ public:
 		olc::vf2d playerAbsoluteChange = {0.0f, 0.0f};
 		
 		// Input
-		if (GetKey(olc::Key::UP).bPressed) {
-			if (isPlayerOnGround()) {
-				player.velocity.y += 4000.0f * elapsedTime;
-			}
+		if (GetKey(olc::Key::UP).bHeld) {
+			// if (isPlayerOnGround()) {
+			// 	player.velocity.y += 4000.0f * elapsedTime;
+			// }
+			playerAbsoluteChange.y += 30.0f * elapsedTime; // TODO: This is a hack to make the player jump without implementing a proper physics system, we should replace this with a proper implementation that takes into account the player's velocity and acceleration
+		}
+		if (GetKey(olc::Key::DOWN).bHeld) {
+			playerAbsoluteChange.y -= 30.0f * elapsedTime; // TODO: This is a hack to make the player jump without implementing a proper physics system, we should replace this with a proper implementation that takes into account the player's velocity and acceleration
 		}
 		if (GetKey(olc::Key::LEFT).bHeld) {
-			playerAbsoluteChange.x -= 20.0f * elapsedTime;
+			playerAbsoluteChange.x -= 30.0f * elapsedTime;
 		}
 		if (GetKey(olc::Key::RIGHT).bHeld) {
-			playerAbsoluteChange.x += 20.0f * elapsedTime;
+			playerAbsoluteChange.x += 30.0f * elapsedTime;
 		}
 
 		olc::vf2d playerVelocity = player.velocity;
-		playerVelocity += gravity * elapsedTime;
+		//playerVelocity += gravity * elapsedTime;
 		
 		// Horizontal
 		olc::vf2d playerPositionBackup = player.position;
