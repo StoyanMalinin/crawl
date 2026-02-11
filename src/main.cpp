@@ -85,24 +85,24 @@ public:
 			}
 		}
 
+		const int auraCirclePointCount = 8;
 		std::vector<olc::vf2d> playerAuraPoints;
-		playerAuraPoints.push_back(player.getCenter());
-		for (int i = 0; i < 8; i++) {
-			float angle = i * 3.14159f / 4.0f;
+		
+		for (int i = 0; i < auraCirclePointCount; i++) {
+			float angle = i * 2.0f * 3.14159f / auraCirclePointCount;
 			playerAuraPoints.push_back(player.getCenter() + olc::vf2d(std::cos(angle), std::sin(angle)) * BallMonster::playerAuraRadius);
+			playerAuraPoints.push_back(player.getCenter() + olc::vf2d(std::cos(angle), std::sin(angle)) * BallMonster::playerAuraRadius / 2);
 		}
 
 		for (const auto& p: playerAuraPoints) {
-			tv.FillCircle(p, 0.03f, olc::GREEN);
+			tv.FillCircle(p, 0.1f, olc::GREEN);
 		}
 
 		// Move existing ball monsters
 		for (auto& [id, ballMonster] : ballMonsters) {
 			tv.DrawCircle(ballMonster.getCenter(), BallMonster::viewRange, olc::RED);
 
-			olc::vf2d dir = player.getCenter() - ballMonster.getCenter();
-			if (dir.mag() > BallMonster::viewRange) continue; // Don't move if player is out of range
-			dir = dir.norm();
+			if ((player.getCenter() - ballMonster.getCenter()).mag() > BallMonster::viewRange) continue; // Don't move if player is out of range
 			
 			int64_t lChunkID = Chunk::yPositionToChunkID(ballMonster.position.y + BallMonster::height + BallMonster::viewRange);
 			int64_t rChunkID = Chunk::yPositionToChunkID(ballMonster.position.y - BallMonster::viewRange);
@@ -113,22 +113,40 @@ public:
 				monsterChunks.back().initialize();
 				monsterChunks.back().debugDraw(tv);
 			}
-			
-			for (const auto& p: playerAuraPoints) {
-				olc::vf2d dir = p - ballMonster.getCenter();
+
+			auto checkReachable = [&](olc::vf2d origin, olc::vf2d target) {
+				olc::vf2d dir = target - origin;
 				
-				float intersectionTime = std::numeric_limits<float>::max();
+				olc::vf2d dirOrt = dir.perp().norm();
+				olc::vf2d end1 = origin + dirOrt * BallMonster::radius * 0.9f;
+				olc::vf2d end2 = origin - dirOrt * BallMonster::radius * 0.9f;
+
+				tv.DrawLine(origin, origin + dir, olc::RED);
+				tv.DrawLine(end1, end1 + dir, olc::WHITE);
+				tv.DrawLine(end2, end2 + dir, olc::WHITE);
+
 				for (const Chunk& chunk : monsterChunks) {
-					float currentIntersection = Collisions::getRayIntersection(ballMonster.getCenter(), dir, chunk);
-					if (currentIntersection < intersectionTime) {
-						intersectionTime = currentIntersection;
+					for (const auto &o: {origin, end1, end2}) {
+						float intersectionTime = Collisions::getRayIntersection(o, dir, chunk);
+						if (intersectionTime < 1.0f - 0.001f) {
+							return false; // Unreachable
+						}
 					}
 				}
-				
-				if (intersectionTime >= 1.0f - 0.001f) {
-					tv.DrawLine(ballMonster.getCenter(), p, olc::RED);
-					ballMonster.position += dir.norm() * 10.0f * elapsedTime;
 
+				return true; // Reachable
+			};
+
+			if (checkReachable(ballMonster.getCenter(), player.getCenter())) {
+				olc::vf2d dir = (player.getCenter() - ballMonster.getCenter()).norm();
+				ballMonster.position += dir * 20.0f * elapsedTime;
+				continue; // If the player is directly reachable, move towards them without checking the aura points
+			}
+			for (const auto& p: playerAuraPoints) {
+				// Note: This idea can be extended further by building a sophisticated aura points set that the monster uses for pathfinding
+				if (checkReachable(ballMonster.getCenter(), p) && checkReachable(p, player.getCenter())) {
+					olc::vf2d dir = (p - ballMonster.getCenter()).norm();
+					ballMonster.position += dir * 20.0f * elapsedTime;
 					break;
 				}
 			}
