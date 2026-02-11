@@ -64,6 +64,38 @@ int Chunk::getChunkID() const {
 void Chunk::initialize() {
     seedChunk();
     for (int i = 0; i < 4; i++) applyCaveAutomaton();
+
+    generateBallMonsters();
+}
+
+void Chunk::generateBallMonsters() {
+    constexpr int xLookupOffset = (BallMonster::width + blockSizeX - 1) / blockSizeX;
+    constexpr int yLookupOffset = (BallMonster::height + blockSizeY - 1) / blockSizeY;
+
+    Random rnd(chunkID);
+    const int monsterCount = rnd.getInt(1, 1);
+    for (int i = 0; i < monsterCount; i++) {
+        for (int attempts = 0; attempts < 10; attempts++) {
+            bool failed = false;
+            int xLeft = rnd.getInt(0, chunkSizeX - 1);
+            int yDown = rnd.getInt(0, chunkSizeY - 1);
+            
+            for (int x = xLeft; x <= xLeft + xLookupOffset && x < chunkSizeX; x++) {
+                for (int y = yDown; y < yDown + yLookupOffset && y < chunkSizeY; y++) {
+                    if (map[y][x]) {
+                        failed = true;
+                        break;   
+                    }
+                }
+            }
+            
+            if (!failed) {
+                olc::vf2d position = chunkIDToOffset(chunkID) + olc::vf2d(float(xLeft) * blockSizeX, float(yDown) * blockSizeY);
+                ballMonsters.emplace_back(rnd.getInt(0, 1000000), position);
+                break;
+            }
+        }
+    }
 }
 
 olc::vf2d Chunk::getOffset() const {
@@ -76,6 +108,19 @@ olc::vf2d Chunk::chunkIDToOffset(int chunkID) {
 
 int64_t Chunk::yPositionToChunkID(float yPos) {
     return static_cast<int64_t>(std::floor(-yPos / chunkHeight));
+}
+
+const std::vector<BallMonster> &Chunk::getBallMonsters() const {
+    return ballMonsters;
+}
+
+AlignedBoxCollider Chunk::getBlockCollider(int x, int y) const {
+    return AlignedBoxCollider(
+        chunkIDToOffset(chunkID).x + x * blockSizeX,
+        chunkIDToOffset(chunkID).y + y * blockSizeY,
+        blockSizeX,
+        blockSizeY
+    );
 }
 
 void Chunk::seedChunk() {

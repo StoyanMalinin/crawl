@@ -36,6 +36,7 @@ private:
 	// Game layer has higher index, so it's rendered behind layer 0
 	uint8_t gameLayer;
 	const uint8_t debugLayer = 0; // Use layer 0 for debug (on top)
+	std::map<size_t, BallMonster> ballMonsters;
 public:
 	bool OnUserCreate() override {	
 		// Create game layer - higher index means drawn behind
@@ -60,8 +61,30 @@ public:
 	}
 
 	void update(float elapsedTime) {
+		// Camera follows the player, so we need to update the world offset based on the player's position
 		worldOffset.y = player.position.y - worldSize.y / 2.0f;
 
+		updatePlayer(elapsedTime);
+		updateBallMonsters(elapsedTime);
+	}
+
+	void updateBallMonsters(float elapsedTime) {
+		// Spawn new ball monsters
+		int64_t lChunkID = Chunk::yPositionToChunkID(worldOffset.y + 10.0f);
+		int64_t rChunkID = Chunk::yPositionToChunkID(worldOffset.y - worldSize.y - 10.0f);
+		for (int64_t chunkID = lChunkID; chunkID <= rChunkID; chunkID++) {
+			Chunk chunk(chunkID);
+			chunk.initialize();
+
+			for (const BallMonster& ballMonster : chunk.getBallMonsters()) {
+				if (!ballMonsters.count(ballMonster.id)) {
+					ballMonsters[ballMonster.id] = ballMonster;
+				}
+			}
+		}
+	}
+
+	void updatePlayer(float elapsedTime) {
 		olc::vf2d playerAbsoluteChange = {0.0f, 0.0f};
 		
 		// Input
@@ -155,6 +178,20 @@ public:
 		// The order is important here, as the player needs to be drawn on top of the chunks
 		drawChunks(tv);
 		drawPlayer(tv);
+		drawBallMonsters(tv);
+	}
+
+	void drawBallMonsters(olc::TransformedView& tv) {
+		std::cout << "Drawing " << ballMonsters.size() << " ball monsters" << std::endl;
+		for (const auto& [id, ballMonster] : ballMonsters) {
+			olc::Decal *decal = assets.getDecal("ball_monster.png");
+			olc::vf2d scale = {
+				BallMonster::width / decal->sprite->width,
+				BallMonster::height / decal->sprite->height
+			};
+
+			tv.DrawDecal(ballMonster.position + olc::vf2d(0, BallMonster::height), decal, scale);
+		}
 	}
 
 	void drawPlayer(olc::TransformedView& tv) {

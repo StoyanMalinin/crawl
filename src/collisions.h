@@ -12,4 +12,7 @@ public:
     static bool checkCollision(const AlignedBoxCollider& a, const AlignedBoxCollider& b);
     static bool checkCollision(const Chunk& chunk, const Player& player, olc::TransformedView tv);
     static bool checkCollision(const Chunk& chunk, const AlignedBoxCollider& collider);
+
+    static bool getRayIntersection(olc::vf2d origin, olc::vf2d direction, AlignedBoxCollider collider, float &intersectionTime);
+    static bool getRayIntersection(olc::vf2d origin, olc::vf2d direction, const Chunk& chunk, float &intersectionTime);
 };
