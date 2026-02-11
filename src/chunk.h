@@ -31,6 +31,7 @@ public:
     static int64_t yPositionToChunkID(float yPos);
     const std::vector<BallMonster>& getBallMonsters() const;
     AlignedBoxCollider getBlockCollider(int x, int y) const;
+    void debugDraw(olc::TransformedView tv) const;
 
 public:
 	static constexpr int chunkSizeX = 60, chunkSizeY = 30; 

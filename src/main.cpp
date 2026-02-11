@@ -69,9 +69,11 @@ public:
 	}
 
 	void updateBallMonsters(float elapsedTime) {
+		olc::TransformedView tv = createTransformedView();
+
 		// Spawn new ball monsters
-		int64_t lChunkID = Chunk::yPositionToChunkID(worldOffset.y + 10.0f);
-		int64_t rChunkID = Chunk::yPositionToChunkID(worldOffset.y - worldSize.y - 10.0f);
+		int64_t lChunkID = Chunk::yPositionToChunkID(worldOffset.y + worldSize.y + 10.0f);
+		int64_t rChunkID = Chunk::yPositionToChunkID(worldOffset.y - 10.0f);
 		for (int64_t chunkID = lChunkID; chunkID <= rChunkID; chunkID++) {
 			Chunk chunk(chunkID);
 			chunk.initialize();
@@ -80,6 +82,35 @@ public:
 				if (!ballMonsters.count(ballMonster.id)) {
 					ballMonsters[ballMonster.id] = ballMonster;
 				}
+			}
+		}
+
+		// Move existing ball monsters
+		for (auto& [id, ballMonster] : ballMonsters) {
+			olc::vf2d dir = player.getCenter() - ballMonster.getCenter();
+			dir = dir.norm();
+			
+			int64_t lChunkID = Chunk::yPositionToChunkID(ballMonster.position.y + BallMonster::height + BallMonster::viewRange);
+			int64_t rChunkID = Chunk::yPositionToChunkID(ballMonster.position.y - BallMonster::viewRange);
+			
+			int64_t intersectionChunkID = 0;
+			float intersectionTime = std::numeric_limits<float>::max();
+			for (int64_t chunkID = lChunkID; chunkID <= rChunkID; chunkID++) {
+				Chunk chunk(chunkID);
+				chunk.initialize();
+
+				float currIntersectionTime = Collisions::getRayIntersection(ballMonster.getCenter(), dir, chunk);
+				if (currIntersectionTime < intersectionTime) {
+					intersectionTime = currIntersectionTime;
+					intersectionChunkID = chunkID;
+				}
+			}
+			
+			tv.DrawLine(ballMonster.getCenter(), player.getCenter(), olc::RED);
+			if (intersectionTime > dir.mag()) {
+				ballMonster.position += dir.norm() * 10.0f * elapsedTime;
+			} else {
+				tv.FillCircle(ballMonster.getCenter() + dir * intersectionTime, 0.5f, olc::YELLOW);
 			}
 		}
 	}
@@ -131,8 +162,8 @@ public:
 		playerGoundCollider.x += 0.1f; // Add a small horizontal tolerance to allow for walking on slopes
 		playerGoundCollider.width -= 0.2f; // Reduce the width by the same amount to keep the collider centered on the player
 
-		int64_t lChunkID = Chunk::yPositionToChunkID(worldOffset.y + 10.0f);
-		int64_t rChunkID = Chunk::yPositionToChunkID(worldOffset.y - worldSize.y - 10.0f);
+		int64_t lChunkID = Chunk::yPositionToChunkID(worldOffset.y + worldSize.y + 10.0f);
+		int64_t rChunkID = Chunk::yPositionToChunkID(worldOffset.y - 10.0f);
 		for (int64_t chunkID = lChunkID; chunkID <= rChunkID; chunkID++) {
 			Chunk chunk(chunkID);
 			chunk.initialize();
@@ -149,8 +180,8 @@ public:
 	// - Maybe introduce a "chunk cache" that stores the chunks that are currently visible, so we don't have to initialize them every frame
 	// - Maybe introduce some space partitioning structure to quickly rule out chunk blocks that are far away from the player
 	bool checkPlayerCollisions() {
-		int64_t lChunkID = Chunk::yPositionToChunkID(worldOffset.y + 10.0f);
-		int64_t rChunkID = Chunk::yPositionToChunkID(worldOffset.y - worldSize.y - 10.0f);
+		int64_t lChunkID = Chunk::yPositionToChunkID(worldOffset.y + worldSize.y + 10.0f);
+		int64_t rChunkID = Chunk::yPositionToChunkID(worldOffset.y - 10.0f);
 		for (int64_t chunkID = lChunkID; chunkID <= rChunkID; chunkID++) {
 			Chunk chunk(chunkID);
 			chunk.initialize();
@@ -181,8 +212,7 @@ public:
 		drawBallMonsters(tv);
 	}
 
-	void drawBallMonsters(olc::TransformedView& tv) {
-		std::cout << "Drawing " << ballMonsters.size() << " ball monsters" << std::endl;
+	void drawBallMonsters(olc::TransformedView tv) {
 		for (const auto& [id, ballMonster] : ballMonsters) {
 			olc::Decal *decal = assets.getDecal("ball_monster.png");
 			olc::vf2d scale = {
@@ -204,9 +234,9 @@ public:
 		tv.DrawDecal(player.position + olc::vf2d(0, Player::height), decal, scale);
 	}
 
-	void drawChunks(olc::TransformedView& tv) {		
-		int64_t lChunkID = Chunk::yPositionToChunkID(worldOffset.y + 10.0f);
-		int64_t rChunkID = Chunk::yPositionToChunkID(worldOffset.y - worldSize.y - 10.0f);
+	void drawChunks(olc::TransformedView tv) {		
+		int64_t lChunkID = Chunk::yPositionToChunkID(worldOffset.y + worldSize.y + 10.0f);
+		int64_t rChunkID = Chunk::yPositionToChunkID(worldOffset.y - 10.0f);
 		for (int64_t chunkID = lChunkID; chunkID <= rChunkID; chunkID++) {
 			Chunk chunk(chunkID);
 			chunk.initialize();

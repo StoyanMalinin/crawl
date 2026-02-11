@@ -107,7 +107,7 @@ olc::vf2d Chunk::chunkIDToOffset(int chunkID) {
 }
 
 int64_t Chunk::yPositionToChunkID(float yPos) {
-    return static_cast<int64_t>(std::floor(-yPos / chunkHeight));
+    return -static_cast<int64_t>(std::floor(yPos / chunkHeight));
 }
 
 const std::vector<BallMonster> &Chunk::getBallMonsters() const {
@@ -121,6 +121,17 @@ AlignedBoxCollider Chunk::getBlockCollider(int x, int y) const {
         blockSizeX,
         blockSizeY
     );
+}
+
+void Chunk::debugDraw(olc::TransformedView tv) const {
+    for (int x = 0; x < chunkSizeX; x++) {
+        for (int y = 0; y < chunkSizeY; y++) {
+            if (map[y][x]) {
+                AlignedBoxCollider collider = getBlockCollider(x, y);
+                collider.debugDraw(tv, olc::YELLOW);
+            }
+        }
+    }
 }
 
 void Chunk::seedChunk() {

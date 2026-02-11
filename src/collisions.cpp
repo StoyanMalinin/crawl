@@ -33,7 +33,7 @@ bool Collisions::checkCollision(const Chunk &chunk, const AlignedBoxCollider &co
     return false;
 }
 
-bool Collisions::getRayIntersection(olc::vf2d origin, olc::vf2d direction, AlignedBoxCollider collider, float &intersectionTime) {
+float Collisions::getRayIntersection(olc::vf2d origin, olc::vf2d direction, AlignedBoxCollider collider) {
     // Using the "slab method" for ray-box intersection
     olc::vf2d invDir = { 1.0f / direction.x, 1.0f / direction.y };
 
@@ -46,35 +46,26 @@ bool Collisions::getRayIntersection(olc::vf2d origin, olc::vf2d direction, Align
     float tmax = std::min(std::max(t1, t2), std::max(t3, t4));
 
     if (tmax < 0 || tmin > tmax) {
-        return false; // No intersection
+        return std::numeric_limits<float>::max(); // No intersection
     }
 
-    intersectionTime = tmin;
-    return true;
+    return tmin;
 }
 
-bool Collisions::getRayIntersection(olc::vf2d origin, olc::vf2d direction, const Chunk &chunk, float &intersectionTime) {
+float Collisions::getRayIntersection(olc::vf2d origin, olc::vf2d direction, const Chunk &chunk) {
     float closestIntersection = std::numeric_limits<float>::max();
-    bool hit = false;
-
     for (int x = 0; x < Chunk::chunkSizeX; x++) {
         for (int y = 0; y < Chunk::chunkSizeY; y++) {
             if (!chunk.getMap(x, y)) continue;
 
             AlignedBoxCollider blockCollider = chunk.getBlockCollider(x, y);
 
-            float currentIntersection;
-            if (getRayIntersection(origin, direction, blockCollider, currentIntersection)) {
-                if (currentIntersection < closestIntersection) {
-                    closestIntersection = currentIntersection;
-                    hit = true;
-                }
+            float currentIntersection = getRayIntersection(origin, direction, blockCollider);
+            if (currentIntersection < closestIntersection) {
+                closestIntersection = currentIntersection;
             }
         }
     }
 
-    if (hit) {
-        intersectionTime = closestIntersection;
-    }
-    return hit;
+    return closestIntersection;
 }

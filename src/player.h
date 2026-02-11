@@ -14,4 +14,5 @@ public:
     Player(float x, float y) : position(x, y), velocity(0.0f, 0.0f) {}
 
     AlignedBoxCollider getCollider() const;
+    olc::vf2d getCenter() const;
 };
