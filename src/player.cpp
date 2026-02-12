@@ -1,6 +1,9 @@
 #include "player.h"
 
-AlignedBoxCollider Player::getCollider() const {
+Player::Player(float x, float y) : position(x, y), velocity(0.0f, 0.0f), health(Player::maxHealth) {}
+
+AlignedBoxCollider Player::getCollider() const
+{
     return AlignedBoxCollider(position.x, position.y, width, height);
 }
 

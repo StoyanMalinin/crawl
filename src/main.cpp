@@ -35,7 +35,9 @@ private:
 	Random rnd; // should only be used for non-procedural things
 
 	// Layer 0 is the default layer, drawn on top (lowest index = rendered last)
-	// Game layer has higher index, so it's rendered behind layer 0
+	// UI layer is rendered below the debug layer but above the game layer
+	// Game layer has highest index, so it's rendered behind everything
+	uint8_t uiLayer;
 	uint8_t gameLayer;
 	const uint8_t debugLayer = 0; // Use layer 0 for debug (on top)
 
@@ -46,7 +48,11 @@ private:
 	std::map<size_t, AttackBall> attackBalls;
 public:
 	bool OnUserCreate() override {	
-		// Create game layer - higher index means drawn behind
+		// Create UI layer - drawn above the game but below the debug layer
+		uiLayer = CreateLayer();
+		EnableLayer(uiLayer, true);
+
+		// Create game layer - highest index means drawn behind everything
 		gameLayer = CreateLayer();
 		EnableLayer(gameLayer, true);
 		
@@ -59,6 +65,11 @@ public:
 		Clear(olc::BLANK);
 		update(elapsedTime);
 		
+		SetDrawTarget(uiLayer);
+		SetPixelMode(olc::Pixel::Mode::ALPHA);
+		Clear(olc::BLANK);
+		drawUI();
+
 		SetDrawTarget(gameLayer);
 		SetPixelMode(olc::Pixel::Mode::NORMAL);
 		Clear(olc::BLACK);
@@ -300,6 +311,29 @@ public:
 		tv.SetWorldOffset(worldOffset);
 		tv.SetWorldScale({ScreenWidth() / worldSize.x, ScreenHeight() / worldSize.y});
 		return tv;
+	}
+
+	void drawUI() {
+		const int barWidth = 200;
+		const int barHeight = 20;
+		const int padding = 10;
+		const int barX = ScreenWidth() - barWidth - padding;
+		const int barY = padding;
+
+		float healthPercent = player.health / Player::maxHealth;
+		int filledWidth = static_cast<int>(barWidth * healthPercent);
+
+		FillRect(barX, barY, barWidth, barHeight, olc::DARK_RED);
+		uint8_t r = static_cast<uint8_t>(255 * (1.0f - healthPercent));
+		uint8_t g = static_cast<uint8_t>(255 * healthPercent);
+		FillRect(barX, barY, filledWidth, barHeight, olc::Pixel(r, g, 0));
+		DrawRect(barX, barY, barWidth, barHeight, olc::WHITE);
+
+		std::string healthText = std::format("Health: {} / {}", static_cast<int>(player.health), static_cast<int>(Player::maxHealth));
+		int textWidth = healthText.size() * 8;
+		int textX = barX + (barWidth - textWidth) / 2;
+		int textY = barY + (barHeight - 8) / 2;
+		DrawString(textX, textY, healthText, olc::WHITE);
 	}
 
 	void draw() {
