@@ -257,7 +257,7 @@ public:
 
 	void drawBallMonsters(olc::TransformedView tv) {
 		for (const auto& [id, ballMonster] : ballMonsters) {
-			olc::Decal *decal = assets.getDecal("ball_monster.png");
+			olc::Decal *decal = assets.getDecal("ball-monster-right.png");
 			olc::vf2d scale = {
 				BallMonster::width / decal->sprite->width,
 				BallMonster::height / decal->sprite->height
@@ -269,7 +269,11 @@ public:
 
 	void drawPlayer(olc::TransformedView& tv) {
 		// Player sprite
-		olc::Decal *decal = assets.getDecal("wizzard.png");
+		olc::Decal *decal = assets.getDecal("wizzard-right.png");
+		if (player.crosshair.x < player.position.x) {
+			decal = assets.getDecal("wizzard-left.png");
+		}
+
 		olc::vf2d scale = {
 			Player::width / decal->sprite->width,
 			Player::height / decal->sprite->height
