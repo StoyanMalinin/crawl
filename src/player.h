@@ -9,12 +9,14 @@ public:
     olc::vf2d velocity;
     float health;
     float stunnedRemaining;
+    float airbornDistance;
 
     static constexpr float width = 3.0f;
     static constexpr float height = 3.0f;
     static constexpr olc::vf2d size = { width, height };
     static constexpr float maxHealth = 100.0f;
     static constexpr float initialStunnedDuration = 0.3f;
+    static constexpr float airbornDamageThreshold = 20.0f;
 
     olc::vf2d crosshair; // center
     static constexpr float crosshairRadius = 1.0f;
@@ -26,4 +28,5 @@ public:
     
     void takeDamage(float damage);
     bool isStunned() const;
+    void takeFallDamage(float distance);
 };

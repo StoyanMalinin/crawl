@@ -216,7 +216,13 @@ public:
 
 	void updatePlayer(float elapsedTime) {
 		olc::vf2d playerAbsoluteChange = {0.0f, 0.0f};
-		
+
+		// Take fall damage if the player has fallen a certain distance
+		if (isPlayerOnGround()) {
+			player.takeFallDamage(player.airbornDistance);
+			player.airbornDistance = 0.0f;
+		}
+
 		// Input
 		if (GetKey(olc::Key::W).bPressed) {
 			if (isPlayerOnGround()) {
@@ -261,6 +267,9 @@ public:
 			player.position = playerPositionBackup;
 			player.velocity.y = 0.0f;
 		} else {
+			if (player.position.y < playerPositionBackup.y) {
+				player.airbornDistance += playerPositionBackup.y - player.position.y;
+			}
 			player.velocity.y = playerVelocity.y;
 		}
 

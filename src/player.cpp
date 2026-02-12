@@ -1,6 +1,7 @@
 #include "player.h"
 
-Player::Player(float x, float y) : position(x, y), velocity(0.0f, 0.0f), health(Player::maxHealth), stunnedRemaining(0) {}
+Player::Player(float x, float y) : position(x, y), velocity(0.0f, 0.0f), 
+    health(Player::maxHealth), stunnedRemaining(0), airbornDistance(0) {}
 
 AlignedBoxCollider Player::getCollider() const
 {
@@ -20,4 +21,10 @@ void Player::takeDamage(float damage) {
 
 bool Player::isStunned() const {
     return stunnedRemaining > 0.0f;
+}
+
+void Player::takeFallDamage(float distance){
+    if (distance > airbornDamageThreshold) {
+        takeDamage(distance - airbornDamageThreshold); 
+    }
 }
