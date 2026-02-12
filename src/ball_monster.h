@@ -9,7 +9,7 @@ public:
     olc::vf2d position;
     olc::vf2d lastDirection;
 
-    static constexpr float radius = 2.0f;
+    static constexpr float radius = 1.5f;
 
     // These are for the box collider and the sprite
     static constexpr float width = radius * 2.0f;
