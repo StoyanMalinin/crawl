@@ -10,6 +10,9 @@ public:
     static constexpr float width = 3.0f;
     static constexpr float height = 3.0f;
     static constexpr olc::vf2d size = { width, height };
+
+    olc::vf2d crosshair; // center
+    static constexpr float crosshairRadius = 1.0f;
     
     Player(float x, float y) : position(x, y), velocity(0.0f, 0.0f) {}
 

@@ -168,6 +168,11 @@ public:
 		if (GetKey(olc::Key::RIGHT).bHeld) {
 			playerAbsoluteChange.x += 30.0f * elapsedTime;
 		}
+		
+		// Crosshair
+		olc::TransformedView tv = createTransformedView();
+		olc::vi2d screenMousePos = GetMousePos();
+		player.crosshair = tv.ScreenToWorld(screenMousePos);
 
 		olc::vf2d playerVelocity = player.velocity;
 		playerVelocity += gravity * elapsedTime;
@@ -263,13 +268,17 @@ public:
 	}
 
 	void drawPlayer(olc::TransformedView& tv) {
+		// Player sprite
 		olc::Decal *decal = assets.getDecal("wizzard.png");
 		olc::vf2d scale = {
 			Player::width / decal->sprite->width,
 			Player::height / decal->sprite->height
 		};
-
 		tv.DrawDecal(player.position + olc::vf2d(0, Player::height), decal, scale);
+
+		// Player crosshair
+		tv.DrawLineDecal(player.crosshair - olc::vf2d(Player::crosshairRadius, 0), player.crosshair + olc::vf2d(Player::crosshairRadius, 0), olc::RED);
+		tv.DrawLineDecal(player.crosshair - olc::vf2d(0, Player::crosshairRadius), player.crosshair + olc::vf2d(0, Player::crosshairRadius), olc::RED);
 	}
 
 	void drawChunks(olc::TransformedView tv) {		
