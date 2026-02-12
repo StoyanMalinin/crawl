@@ -7,6 +7,7 @@ class BallMonster {
 public:
     size_t id;
     olc::vf2d position;
+    olc::vf2d lastDirection;
 
     static constexpr float radius = 2.0f;
 
@@ -21,4 +22,5 @@ public:
 
     AlignedBoxCollider getCollider() const;
     olc::vf2d getCenter() const;
+    void moveBy(olc::vf2d delta);
 };

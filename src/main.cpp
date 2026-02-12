@@ -21,7 +21,7 @@
 class Crawl : public olc::PixelGameEngine
 {
 public:
-	Crawl() : assets("assets"), player(50.0f, 0.0f) {
+	Crawl() : assets("assets"), player(50.0f, 0.0f), rnd(22) {
 		sAppName = "Crawl";
 	}
 
@@ -31,6 +31,7 @@ private:
 	olc::vf2d worldOffset = {0.0f, 0.0f};
 	const olc::vf2d worldSize = {Chunk::chunkWidth, Chunk::chunkHeight};
 	const olc::vf2d gravity = {0.0f, -60.0f};
+	Random rnd; // should only be used for non-procedural things
 
 	// Layer 0 is the default layer, drawn on top (lowest index = rendered last)
 	// Game layer has higher index, so it's rendered behind layer 0
@@ -136,17 +137,18 @@ public:
 
 				return true; // Reachable
 			};
-
+			
+			const float monsterSpeed = rnd.getFloat(5.0f, 30.0f);
 			if (checkReachable(ballMonster.getCenter(), player.getCenter())) {
-				olc::vf2d dir = (player.getCenter() - ballMonster.getCenter()).norm();
-				ballMonster.position += dir * 20.0f * elapsedTime;
+				olc::vf2d dir = (player.getCenter() - ballMonster.getCenter()).norm();	
+				ballMonster.moveBy(dir * monsterSpeed * elapsedTime);
 				continue; // If the player is directly reachable, move towards them without checking the aura points
 			}
 			for (const auto& p: playerAuraPoints) {
 				// Note: This idea can be extended further by building a sophisticated aura points set that the monster uses for pathfinding
 				if (checkReachable(ballMonster.getCenter(), p) && checkReachable(p, player.getCenter())) {
 					olc::vf2d dir = (p - ballMonster.getCenter()).norm();
-					ballMonster.position += dir * 20.0f * elapsedTime;
+					ballMonster.moveBy(dir * monsterSpeed * elapsedTime);
 					break;
 				}
 			}
@@ -258,6 +260,10 @@ public:
 	void drawBallMonsters(olc::TransformedView tv) {
 		for (const auto& [id, ballMonster] : ballMonsters) {
 			olc::Decal *decal = assets.getDecal("ball-monster-right.png");
+			if (ballMonster.lastDirection.x < 0) {
+				decal = assets.getDecal("ball-monster-left.png");
+			}
+
 			olc::vf2d scale = {
 				BallMonster::width / decal->sprite->width,
 				BallMonster::height / decal->sprite->height
