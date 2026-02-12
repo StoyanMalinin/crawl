@@ -157,15 +157,15 @@ public:
 		olc::vf2d playerAbsoluteChange = {0.0f, 0.0f};
 		
 		// Input
-		if (GetKey(olc::Key::UP).bPressed) {
+		if (GetKey(olc::Key::W).bPressed) {
 			if (isPlayerOnGround()) {
 				player.velocity.y += 30.0f;
 			}
 		}
-		if (GetKey(olc::Key::LEFT).bHeld) {
+		if (GetKey(olc::Key::A).bHeld) {
 			playerAbsoluteChange.x -= 30.0f * elapsedTime;
 		}
-		if (GetKey(olc::Key::RIGHT).bHeld) {
+		if (GetKey(olc::Key::D).bHeld) {
 			playerAbsoluteChange.x += 30.0f * elapsedTime;
 		}
 		
