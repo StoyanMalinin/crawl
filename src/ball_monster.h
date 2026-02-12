@@ -18,6 +18,7 @@ public:
     static constexpr float viewRange = 40.0f;
     static constexpr float playerAuraRadius = 20.0f;
     static constexpr float maxHealth = 10.0f;
+    static constexpr float contactDamage = 10.0f;
 
     BallMonster() = default;
     BallMonster(size_t id, olc::vf2d position);

@@ -263,6 +263,19 @@ public:
 		} else {
 			player.velocity.y = playerVelocity.y;
 		}
+
+		// Stun update
+		player.stunnedRemaining = std::max(0.0f, player.stunnedRemaining - elapsedTime);
+
+		// Take potential damage from ball monsters
+		if (!player.isStunned()) {
+			for (const auto& [id, ballMonster] : ballMonsters) {
+				if (Collisions::checkCollision(player.getCollider(), ballMonster.getCollider())) {
+					player.takeDamage(BallMonster::contactDamage);
+					break;
+				}
+			}
+		}
 	}
 
 	bool isPlayerOnGround() {
@@ -390,7 +403,11 @@ public:
 			Player::width / decal->sprite->width,
 			Player::height / decal->sprite->height
 		};
-		tv.DrawDecal(player.position + olc::vf2d(0, Player::height), decal, scale);
+		
+		olc::Pixel tint = olc::WHITE;
+		if (player.isStunned()) tint = olc::YELLOW;
+
+		tv.DrawDecal(player.position + olc::vf2d(0, Player::height), decal, scale, tint);
 
 		// Player crosshair
 		tv.DrawLineDecal(player.crosshair - olc::vf2d(Player::crosshairRadius, 0), player.crosshair + olc::vf2d(Player::crosshairRadius, 0), olc::RED);
