@@ -1,6 +1,6 @@
 # Compiler and flags
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -O2
+CXXFLAGS = -std=c++20 -Wall -Wextra -O2
 LDFLAGS = -lX11 -lGL -lpthread -lpng -lstdc++fs
 
 # Target executable
