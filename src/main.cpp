@@ -95,12 +95,12 @@ public:
 		}
 
 		for (const auto& p: playerAuraPoints) {
-			tv.FillCircle(p, 0.1f, olc::GREEN);
+			// tv.FillCircle(p, 0.1f, olc::GREEN);
 		}
 
 		// Move existing ball monsters
 		for (auto& [id, ballMonster] : ballMonsters) {
-			tv.DrawCircle(ballMonster.getCenter(), BallMonster::viewRange, olc::RED);
+			// tv.DrawCircle(ballMonster.getCenter(), BallMonster::viewRange, olc::RED);
 
 			if ((player.getCenter() - ballMonster.getCenter()).mag() > BallMonster::viewRange) continue; // Don't move if player is out of range
 			
@@ -111,7 +111,7 @@ public:
 			for (int64_t chunkID = lChunkID; chunkID <= rChunkID; chunkID++) {
 				monsterChunks.emplace_back(chunkID);
 				monsterChunks.back().initialize();
-				monsterChunks.back().debugDraw(tv);
+				// monsterChunks.back().debugDraw(tv);
 			}
 
 			auto checkReachable = [&](olc::vf2d origin, olc::vf2d target) {
@@ -121,9 +121,9 @@ public:
 				olc::vf2d end1 = origin + dirOrt * BallMonster::radius * 0.9f;
 				olc::vf2d end2 = origin - dirOrt * BallMonster::radius * 0.9f;
 
-				tv.DrawLine(origin, origin + dir, olc::RED);
-				tv.DrawLine(end1, end1 + dir, olc::WHITE);
-				tv.DrawLine(end2, end2 + dir, olc::WHITE);
+				// tv.DrawLine(origin, origin + dir, olc::RED);
+				// tv.DrawLine(end1, end1 + dir, olc::WHITE);
+				// tv.DrawLine(end2, end2 + dir, olc::WHITE);
 
 				for (const Chunk& chunk : monsterChunks) {
 					for (const auto &o: {origin, end1, end2}) {
