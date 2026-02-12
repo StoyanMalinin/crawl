@@ -91,7 +91,7 @@ void Chunk::generateBallMonsters() {
             
             if (!failed) {
                 olc::vf2d position = chunkIDToOffset(chunkID) + olc::vf2d(float(xLeft) * blockSizeX, float(yDown) * blockSizeY);
-                ballMonsters.emplace_back(rnd.getInt(0, 1000000), position);
+                ballMonsters.emplace_back(rnd.getID(), position);
                 break;
             }
         }

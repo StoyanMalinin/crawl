@@ -4,7 +4,7 @@
 
 class Random {
 private:
-    std::mt19937 rnd;
+    std::mt19937_64 rnd;
     
 public:
     Random();
@@ -14,4 +14,5 @@ public:
     int getInt(int min, int max);
     bool getChance(double percent);
     float getFloat(float min, float max);
+    size_t getID();
 };

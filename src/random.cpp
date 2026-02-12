@@ -21,3 +21,7 @@ float Random::getFloat(float min, float max) {
     std::uniform_real_distribution<float> dist(min, max);
     return dist(rnd);
 }
+
+size_t Random::getID() {
+    return rnd();
+}

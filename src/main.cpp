@@ -17,6 +17,7 @@
 #include "player.h"
 #include "collisions.h"
 #include "aligned_box_collider.h"
+#include "attack_ball.h"
 
 class Crawl : public olc::PixelGameEngine
 {
@@ -26,7 +27,6 @@ public:
 	}
 
 private:
-	Player player;
 	Assets assets;
 	olc::vf2d worldOffset = {0.0f, 0.0f};
 	const olc::vf2d worldSize = {Chunk::chunkWidth, Chunk::chunkHeight};
@@ -37,7 +37,11 @@ private:
 	// Game layer has higher index, so it's rendered behind layer 0
 	uint8_t gameLayer;
 	const uint8_t debugLayer = 0; // Use layer 0 for debug (on top)
+
+	// Entities
+	Player player;
 	std::map<size_t, BallMonster> ballMonsters;
+	std::map<size_t, AttackBall> attackBalls;
 public:
 	bool OnUserCreate() override {	
 		// Create game layer - higher index means drawn behind
@@ -67,6 +71,13 @@ public:
 
 		updatePlayer(elapsedTime);
 		updateBallMonsters(elapsedTime);
+		updateAttackBalls(elapsedTime);
+	}
+
+	void updateAttackBalls(float elapsedTime) {
+		for (auto& [id, attackBall] : attackBalls) {
+			attackBall.position += attackBall.dir * AttackBall::speed * elapsedTime;
+		}
 	}
 
 	void updateBallMonsters(float elapsedTime) {
@@ -176,6 +187,12 @@ public:
 		olc::vi2d screenMousePos = GetMousePos();
 		player.crosshair = tv.ScreenToWorld(screenMousePos);
 
+		// Fire attack ball
+		if (GetMouse(olc::Mouse::LEFT).bPressed) {
+			olc::vf2d dir = (player.crosshair - player.getCenter()).norm();
+			attackBalls[rnd.getID()] = AttackBall(player.getCenter(), dir);
+		}
+
 		olc::vf2d playerVelocity = player.velocity;
 		playerVelocity += gravity * elapsedTime;
 		
@@ -254,7 +271,20 @@ public:
 		// The order is important here, as the player needs to be drawn on top of the chunks
 		drawChunks(tv);
 		drawPlayer(tv);
+		drawAttackBalls(tv);
 		drawBallMonsters(tv);
+	}
+
+	void drawAttackBalls(olc::TransformedView tv) {
+		for (const auto& [id, attackBall] : attackBalls) {
+			olc::Decal *decal = assets.getDecal("wizzard-attack-ball.png");
+			olc::vf2d scale = {
+				AttackBall::radius * 2 / decal->sprite->width,
+				AttackBall::radius * 2 / decal->sprite->height
+			};
+
+			tv.DrawDecal(attackBall.position + olc::vf2d(-AttackBall::radius, AttackBall::radius), decal, scale);
+		}
 	}
 
 	void drawBallMonsters(olc::TransformedView tv) {
