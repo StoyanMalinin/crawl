@@ -157,14 +157,10 @@ public:
 		olc::vf2d playerAbsoluteChange = {0.0f, 0.0f};
 		
 		// Input
-		if (GetKey(olc::Key::UP).bHeld) {
-			// if (isPlayerOnGround()) {
-			// 	player.velocity.y += 4000.0f * elapsedTime;
-			// }
-			playerAbsoluteChange.y += 30.0f * elapsedTime; // TODO: This is a hack to make the player jump without implementing a proper physics system, we should replace this with a proper implementation that takes into account the player's velocity and acceleration
-		}
-		if (GetKey(olc::Key::DOWN).bHeld) {
-			playerAbsoluteChange.y -= 30.0f * elapsedTime; // TODO: This is a hack to make the player jump without implementing a proper physics system, we should replace this with a proper implementation that takes into account the player's velocity and acceleration
+		if (GetKey(olc::Key::UP).bPressed) {
+			if (isPlayerOnGround()) {
+				player.velocity.y += 30.0f;
+			}
 		}
 		if (GetKey(olc::Key::LEFT).bHeld) {
 			playerAbsoluteChange.x -= 30.0f * elapsedTime;
@@ -174,7 +170,7 @@ public:
 		}
 
 		olc::vf2d playerVelocity = player.velocity;
-		//playerVelocity += gravity * elapsedTime;
+		playerVelocity += gravity * elapsedTime;
 		
 		// Horizontal
 		olc::vf2d playerPositionBackup = player.position;
