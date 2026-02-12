@@ -18,6 +18,7 @@
 #include "collisions.h"
 #include "aligned_box_collider.h"
 #include "attack_ball.h"
+#include <set>
 
 class Crawl : public olc::PixelGameEngine
 {
@@ -40,6 +41,7 @@ private:
 
 	// Entities
 	Player player;
+	std::set<size_t> deadBallMonsters;
 	std::map<size_t, BallMonster> ballMonsters;
 	std::map<size_t, AttackBall> attackBalls;
 public:
@@ -70,18 +72,53 @@ public:
 		worldOffset.y = player.position.y - worldSize.y / 2.0f;
 
 		updatePlayer(elapsedTime);
-		updateBallMonsters(elapsedTime);
 		updateAttackBalls(elapsedTime);
+		updateBallMonsters(elapsedTime);
 	}
 
 	void updateAttackBalls(float elapsedTime) {
-		for (auto& [id, attackBall] : attackBalls) {
+		for (auto it = attackBalls.begin(); it != attackBalls.end(); ) {
+			auto& [id, attackBall] = *it;
 			attackBall.position += attackBall.dir * AttackBall::speed * elapsedTime;
+			
+			// Check collision with chunks
+			int64_t chunkID = Chunk::yPositionToChunkID(attackBall.position.y);
+			Chunk chunk(chunkID);
+			chunk.initialize();
+			if (Collisions::checkCollision(chunk, attackBall.getCollider())) {
+				it = attackBalls.erase(it);
+				continue;
+			}
+
+			// Check collision with ball monsters
+			bool erased = false;
+			for (auto& [monsterID, ballMonster] : ballMonsters) {
+				if (Collisions::checkCollision(ballMonster.getCollider(), attackBall.getCollider())) {
+					ballMonster.health -= AttackBall::damage;
+					it = attackBalls.erase(it);
+					erased = true;
+					break;
+				}
+			}
+			if (!erased) {
+				++it;
+			}
 		}
 	}
 
 	void updateBallMonsters(float elapsedTime) {
 		olc::TransformedView tv = createTransformedView();
+		
+		// Cleanup dead ball monsters
+		for (auto it = ballMonsters.begin(); it != ballMonsters.end(); ) {
+			auto& [id, ballMonster] = *it;
+			if (ballMonster.health <= 0.0f) {
+				deadBallMonsters.insert(id);
+				it = ballMonsters.erase(it);
+			} else {
+				++it;
+			}
+		}
 
 		// Spawn new ball monsters
 		int64_t lChunkID = Chunk::yPositionToChunkID(worldOffset.y + worldSize.y + 10.0f);
@@ -91,7 +128,7 @@ public:
 			chunk.initialize();
 
 			for (const BallMonster& ballMonster : chunk.getBallMonsters()) {
-				if (!ballMonsters.count(ballMonster.id)) {
+				if (!ballMonsters.count(ballMonster.id) && !deadBallMonsters.count(ballMonster.id)) {
 					ballMonsters[ballMonster.id] = ballMonster;
 				}
 			}

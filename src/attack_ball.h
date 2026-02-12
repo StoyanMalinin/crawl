@@ -1,6 +1,7 @@
 #pragma once
 
 #include "olcPixelGameEngine.h"
+#include "aligned_box_collider.h"
 
 class AttackBall {
 public:
@@ -9,7 +10,10 @@ public:
 
     static constexpr float radius = 0.5f;
     static constexpr float speed = 40.0f;
+    static constexpr float damage = 5.0f;
 
     AttackBall() = default;
     AttackBall(olc::vf2d position, olc::vf2d dir);
+
+    AlignedBoxCollider getCollider() const;
 };

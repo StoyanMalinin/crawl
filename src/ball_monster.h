@@ -8,6 +8,7 @@ public:
     size_t id;
     olc::vf2d position;
     olc::vf2d lastDirection;
+    float health;
 
     static constexpr float radius = 1.5f;
 
