@@ -2,7 +2,7 @@
 #include "aligned_box_collider.h"
 
 BallMonster::BallMonster(size_t id, olc::vf2d position)
-    : id(id), position(position), health(10.0f) {}
+    : id(id), position(position), health(BallMonster::maxHealth) {}
 
 AlignedBoxCollider BallMonster::getCollider() const {
     return AlignedBoxCollider(position.x, position.y, width, height);

@@ -326,17 +326,22 @@ public:
 
 	void drawBallMonsters(olc::TransformedView tv) {
 		for (const auto& [id, ballMonster] : ballMonsters) {
+			// Draw sprite
 			olc::Decal *decal = assets.getDecal("ball-monster-right.png");
 			if (ballMonster.lastDirection.x < 0) {
 				decal = assets.getDecal("ball-monster-left.png");
 			}
-
 			olc::vf2d scale = {
 				BallMonster::width / decal->sprite->width,
 				BallMonster::height / decal->sprite->height
 			};
-
 			tv.DrawDecal(ballMonster.position + olc::vf2d(0, BallMonster::height), decal, scale);
+		
+			// Draw health bar
+			float healthPercent = ballMonster.health / BallMonster::maxHealth;
+			olc::vf2d healthBarSize = {BallMonster::width, 0.5f};
+			tv.FillRectDecal(ballMonster.position + olc::vf2d(0, BallMonster::height + 0.5f), healthBarSize, olc::RED);
+			tv.FillRectDecal(ballMonster.position + olc::vf2d(0, BallMonster::height + 0.5f), olc::vf2d(healthBarSize.x * healthPercent, healthBarSize.y), olc::GREEN);
 		}
 	}
 
