@@ -117,10 +117,7 @@ public:
 		}
 	}
 
-	void updateBallMonsters(float elapsedTime) {
-		olc::TransformedView tv = createTransformedView();
-		
-		// Cleanup dead ball monsters
+	void cleanupDeadBallMonsters() {
 		for (auto it = ballMonsters.begin(); it != ballMonsters.end(); ) {
 			auto& [id, ballMonster] = *it;
 			if (ballMonster.health <= 0.0f) {
@@ -130,8 +127,9 @@ public:
 				++it;
 			}
 		}
+	}
 
-		// Spawn new ball monsters
+	void spawnBallMonsters() {
 		int64_t lChunkID = Chunk::yPositionToChunkID(worldOffset.y + worldSize.y + 10.0f);
 		int64_t rChunkID = Chunk::yPositionToChunkID(worldOffset.y - 10.0f);
 		for (int64_t chunkID = lChunkID; chunkID <= rChunkID; chunkID++) {
@@ -144,30 +142,32 @@ public:
 				}
 			}
 		}
+	}
+
+	void updateBallMonsters(float elapsedTime) {
+		olc::TransformedView tv = createTransformedView();
+		
+		cleanupDeadBallMonsters();
+		spawnBallMonsters();
 
 		const int auraCirclePointCount = 8;
 		std::vector<olc::vf2d> playerAuraPoints;
-		
 		for (int i = 0; i < auraCirclePointCount; i++) {
 			float angle = i * 2.0f * 3.14159f / auraCirclePointCount;
 			playerAuraPoints.push_back(player.getCenter() + olc::vf2d(std::cos(angle), std::sin(angle)) * BallMonster::playerAuraRadius);
 			playerAuraPoints.push_back(player.getCenter() + olc::vf2d(std::cos(angle), std::sin(angle)) * BallMonster::playerAuraRadius / 2);
 		}
-
-		for (const auto& p: playerAuraPoints) {
-			// tv.FillCircle(p, 0.1f, olc::GREEN);
-		}
+		// for (const auto& p: playerAuraPoints) {
+		// 		tv.FillCircle(p, 0.1f, olc::GREEN);
+		// }
 
 		// Move existing ball monsters
 		for (auto& [id, ballMonster] : ballMonsters) {
 			// tv.DrawCircle(ballMonster.getCenter(), BallMonster::viewRange, olc::RED);
-
-			if ((player.getCenter() - ballMonster.getCenter()).mag() > BallMonster::viewRange) continue; // Don't move if player is out of range
 			
+			std::vector<Chunk> monsterChunks;
 			int64_t lChunkID = Chunk::yPositionToChunkID(ballMonster.position.y + BallMonster::height + BallMonster::viewRange);
 			int64_t rChunkID = Chunk::yPositionToChunkID(ballMonster.position.y - BallMonster::viewRange);
-
-			std::vector<Chunk> monsterChunks;
 			for (int64_t chunkID = lChunkID; chunkID <= rChunkID; chunkID++) {
 				monsterChunks.emplace_back(chunkID);
 				monsterChunks.back().initialize();
@@ -196,19 +196,35 @@ public:
 
 				return true; // Reachable
 			};
-			
-			const float monsterSpeed = rnd.getFloat(5.0f, 30.0f);
-			if (checkReachable(ballMonster.getCenter(), player.getCenter())) {
-				olc::vf2d dir = (player.getCenter() - ballMonster.getCenter()).norm();	
-				ballMonster.moveBy(dir * monsterSpeed * elapsedTime);
-				continue; // If the player is directly reachable, move towards them without checking the aura points
-			}
-			for (const auto& p: playerAuraPoints) {
-				// Note: This idea can be extended further by building a sophisticated aura points set that the monster uses for pathfinding
-				if (checkReachable(ballMonster.getCenter(), p) && checkReachable(p, player.getCenter())) {
-					olc::vf2d dir = (p - ballMonster.getCenter()).norm();
+
+			bool monsterMoved = false;
+			if ((player.getCenter() - ballMonster.getCenter()).mag() <= BallMonster::viewRange) { // Move towards the player if they are within view range	
+				const float monsterSpeed = rnd.getFloat(5.0f, 30.0f);
+				if (checkReachable(ballMonster.getCenter(), player.getCenter())) {
+					olc::vf2d dir = (player.getCenter() - ballMonster.getCenter()).norm();	
 					ballMonster.moveBy(dir * monsterSpeed * elapsedTime);
-					break;
+					monsterMoved = true;
+				} else {
+					for (const auto& p: playerAuraPoints) {
+						// Note: This idea can be extended further by building a sophisticated aura points set that the monster uses for pathfinding
+						if (checkReachable(ballMonster.getCenter(), p) && checkReachable(p, player.getCenter())) {
+							olc::vf2d dir = (p - ballMonster.getCenter()).norm();
+							ballMonster.moveBy(dir * monsterSpeed * elapsedTime);
+							
+							monsterMoved = true;
+							break;
+						}
+					}
+				}
+			}
+			
+			if (!monsterMoved) { // Move in a random direction if the player is out of view range
+				auto currTime = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()).time_since_epoch().count();
+				olc::vf2d dir = olc::vf2d(std::cos(currTime / 1000.0f), std::sin(currTime / 1000.0f)) * elapsedTime * rnd.getFloat(5.0f, 10.0f);
+				
+				if (checkReachable(ballMonster.getCenter(), ballMonster.getCenter() + dir)) {
+					ballMonster.moveBy(dir);
+					monsterMoved = true;
 				}
 			}
 		}

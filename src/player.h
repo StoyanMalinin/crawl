@@ -16,7 +16,7 @@ public:
     static constexpr olc::vf2d size = { width, height };
     static constexpr float maxHealth = 100.0f;
     static constexpr float initialStunnedDuration = 0.3f;
-    static constexpr float airbornDamageThreshold = 20.0f;
+    static constexpr float airbornDamageThreshold = 30.0f;
 
     olc::vf2d crosshair; // center
     static constexpr float crosshairRadius = 1.0f;
