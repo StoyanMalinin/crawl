@@ -85,9 +85,17 @@ public:
 		// Camera follows the player, so we need to update the world offset based on the player's position
 		worldOffset.y = player.position.y - worldSize.y / 2.0f;
 
+		updateChunks(elapsedTime);
 		updatePlayer(elapsedTime);
 		updateAttackBalls(elapsedTime);
 		updateBallMonsters(elapsedTime);
+	}
+
+	void updateChunks(float elapsedTime) {
+		std::vector<Chunk*> chunks = world.getRelevantChunks(worldOffset.x, worldOffset.y - 10.0f, worldOffset.x + worldSize.x, worldOffset.y + worldSize.y + 10.0f);
+		for (Chunk* chunk : chunks) {
+			chunk->updateBurning(elapsedTime);
+		}
 	}
 
 	void updateAttackBalls(float elapsedTime) {
@@ -98,6 +106,12 @@ public:
 			// Check collision with chunks
 			Chunk &chunk = world.getChunkByPosition(attackBall.position.x, attackBall.position.y);
 			if (Collisions::checkCollision(chunk, attackBall.getCollider())) {
+				olc::vi2d collisionGridPos = Collisions::getCollision(chunk, attackBall.getCollider());
+				TileType tileType = chunk.getMap(collisionGridPos.x, collisionGridPos.y);
+				if (tileType == TileType::FireBag) {
+					chunk.ignite(collisionGridPos.x, collisionGridPos.y);
+				}
+				
 				it = attackBalls.erase(it);
 				continue;
 			}
@@ -112,9 +126,11 @@ public:
 					break;
 				}
 			}
-			if (!erased) {
-				++it;
+			if (erased) {
+				continue;
 			}
+
+			it++;
 		}
 	}
 
@@ -430,7 +446,7 @@ public:
 					olc::vf2d center = bottomLeft + olc::vf2d(Chunk::blockSizeX / 2.0f, -Chunk::blockSizeY / 2.0f);
 					olc::vf2d blockAboveCenter = center + olc::vf2d(0, Chunk::blockSizeY);
 
-					auto drawDecal = [&](olc::Decal *decal) {
+					auto drawDecal = [&](olc::Decal *decal, olc::Pixel tint = olc::WHITE) {
 						olc::vf2d scale = {
 							Chunk::blockSizeX / decal->sprite->width,
 							Chunk::blockSizeY / decal->sprite->height
@@ -439,7 +455,8 @@ public:
 						tv.DrawDecal(
 							bottomLeft,
 							decal,
-							scale
+							scale, 
+							tint
 						);
 					};
 
@@ -453,7 +470,7 @@ public:
 							drawDecal(assets.getDecal("wall-mid.png"));
 						}
 					} else if (chunk->getMap(x, y) == TileType::FireBag) {
-						drawDecal(assets.getDecal("background.png"));
+						drawDecal(assets.getDecal("background.png"), chunk->isIgnitedAt(x, y) ? olc::RED : olc::WHITE);
 						drawDecal(assets.getDecal("fire-bag.png"));
 					}
 				}

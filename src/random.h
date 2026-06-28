@@ -15,4 +15,6 @@ public:
     bool getChance(double percent);
     float getFloat(float min, float max);
     size_t getID();
+
+    static Random& instance();
 };

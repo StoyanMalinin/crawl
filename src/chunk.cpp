@@ -17,6 +17,9 @@ void Chunk::free() {
 
 void Chunk::copy(const Chunk& other) {
     chunkID = other.chunkID;
+    isIgnited = other.isIgnited;
+    burningTime = other.burningTime;
+    
     if (other.map != nullptr) {
         map = new TileType*[chunkSizeY];
         for (int i = 0; i < chunkSizeY; i++) {
@@ -35,6 +38,9 @@ Chunk::Chunk(int chunkID) : chunkID(chunkID) {
     for (int i = 0; i < chunkSizeY; i++) {
         map[i] = new TileType[chunkSizeX];
     }
+
+    isIgnited.resize(chunkSizeY, std::vector<bool>(chunkSizeX, false));
+    burningTime.resize(chunkSizeY, std::vector<float>(chunkSizeX, 0.0f));
 }
 
 Chunk::~Chunk() {
@@ -55,6 +61,31 @@ Chunk& Chunk::operator=(const Chunk& other) {
 
 TileType Chunk::getMap(int x, int y) const {
     return map[y][x];
+}
+
+void Chunk::ignite(int x, int y) {
+    if (!isIgnited[y][x]) {
+        isIgnited[y][x] = true;
+        burningTime[y][x] = Random::instance().getFloat(minBurningTime, maxBurningTime);
+    }
+}
+
+bool Chunk::isIgnitedAt(int x, int y) const {
+    return isIgnited[y][x];
+}
+
+void Chunk::updateBurning(float elapsedTime) {
+    for (int x = 0; x < chunkSizeX; x++) {
+        for (int y = 0; y < chunkSizeY; y++) {
+            if (isIgnited[y][x]) {
+                burningTime[y][x] -= elapsedTime;
+                if (burningTime[y][x] <= 0.0f) {
+                    isIgnited[y][x] = false;
+                    map[y][x] = TileType::Empty;
+                }
+            }
+        }
+    }
 }
 
 olc::vi2d Chunk::positionToGrid(float x, float y) const {

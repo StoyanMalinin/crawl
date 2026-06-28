@@ -18,6 +18,11 @@ bool Collisions::checkCollision(const Chunk &chunk, const Player &player, olc::T
 }
 
 bool Collisions::checkCollision(const Chunk &chunk, const AlignedBoxCollider &collider) {
+    olc::vi2d collisionGridPos = getCollision(chunk, collider);
+    return collisionGridPos.x != -1;
+}
+
+olc::vi2d Collisions::getCollision(const Chunk &chunk, const AlignedBoxCollider &collider) {
     for (int x = 0; x < Chunk::chunkSizeX; x++) {
         for (int y = 0; y < Chunk::chunkSizeY; y++) {
             if (chunk.getMap(x, y) == TileType::Empty) continue;
@@ -25,12 +30,12 @@ bool Collisions::checkCollision(const Chunk &chunk, const AlignedBoxCollider &co
             AlignedBoxCollider blockCollider = chunk.getBlockCollider(x, y);
 
             if (checkCollision(collider, blockCollider)) {
-                return true;
+                return {x, y};
             }
         }
     }
 
-    return false;
+    return {-1, -1};
 }
 
 float Collisions::getRayIntersection(olc::vf2d origin, olc::vf2d direction, AlignedBoxCollider collider) {

@@ -25,3 +25,8 @@ float Random::getFloat(float min, float max) {
 size_t Random::getID() {
     return rnd();
 }
+
+Random &Random::instance() {
+    static Random instance;
+    return instance;
+}

@@ -4,6 +4,7 @@
 #include "ball_monster.h"
 
 enum class TileType {
+    Invalid,
     Empty,
     Ground,
     FireBag
@@ -14,6 +15,9 @@ private:
     int chunkID;
     TileType **map = nullptr;
     std::vector<BallMonster> ballMonsters;
+
+    std::vector<std::vector<bool>> isIgnited;
+    std::vector<std::vector<float>> burningTime;
 
 private:
     void free();
@@ -41,10 +45,15 @@ public:
     AlignedBoxCollider getBlockCollider(int x, int y) const;
     void debugDraw(olc::TransformedView tv) const;
 
+    void ignite(int x, int y);
+    bool isIgnitedAt(int x, int y) const;
+    void updateBurning(float elapsedTime);
+
 public:
 	static constexpr int chunkSizeX = 60, chunkSizeY = 30; 
 	static constexpr float chunkWidth = 128.0f;
 	static constexpr float chunkHeight = 72.0f;
 	static constexpr float blockSizeX = chunkWidth / float(chunkSizeX);
 	static constexpr float blockSizeY = chunkHeight / float(chunkSizeY);
+    static constexpr float minBurningTime = 2.0f, maxBurningTime = 4.0f; // seconds
 };
