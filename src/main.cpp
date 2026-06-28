@@ -450,7 +450,7 @@ public:
 			for (int x = 0; x < Chunk::chunkSizeX; x++) {
 				for (int y = 0; y < Chunk::chunkSizeY; y++) {
 					olc::Decal *decal = chunk.getMap(x, y) ? 
-						assets.getDecal("wall.png") : 
+						assets.getDecal("wall-mid.png") : 
 						assets.getDecal("background.png");
 					olc::vf2d scale = {
 						Chunk::blockSizeX / decal->sprite->width,
