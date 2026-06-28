@@ -430,26 +430,32 @@ public:
 					olc::vf2d center = bottomLeft + olc::vf2d(Chunk::blockSizeX / 2.0f, -Chunk::blockSizeY / 2.0f);
 					olc::vf2d blockAboveCenter = center + olc::vf2d(0, Chunk::blockSizeY);
 
+					auto drawDecal = [&](olc::Decal *decal) {
+						olc::vf2d scale = {
+							Chunk::blockSizeX / decal->sprite->width,
+							Chunk::blockSizeY / decal->sprite->height
+						};
+
+						tv.DrawDecal(
+							bottomLeft,
+							decal,
+							scale
+						);
+					};
+
 					olc::Decal *decal = nullptr; 
 					if (chunk->getMap(x, y) == TileType::Empty) {
-						decal = assets.getDecal("background.png");
-					} else {
+						drawDecal(assets.getDecal("background.png"));
+					} else if (chunk->getMap(x, y) == TileType::Ground) {
 						if (world.getWorldAt(blockAboveCenter.x, blockAboveCenter.y) == TileType::Empty) {
-							decal = assets.getDecal("wall-top.png");
+							drawDecal(assets.getDecal("wall-top.png"));
 						} else {
-							decal = assets.getDecal("wall-mid.png");
+							drawDecal(assets.getDecal("wall-mid.png"));
 						}
+					} else if (chunk->getMap(x, y) == TileType::FireBag) {
+						drawDecal(assets.getDecal("background.png"));
+						drawDecal(assets.getDecal("fire-bag.png"));
 					}
-					
-					olc::vf2d scale = {
-						Chunk::blockSizeX / decal->sprite->width,
-						Chunk::blockSizeY / decal->sprite->height
-					};
-					tv.DrawDecal(
-						bottomLeft,
-						decal,
-						scale
-					);
 				}
 			}
 		}

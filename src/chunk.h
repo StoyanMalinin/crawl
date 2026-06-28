@@ -6,6 +6,7 @@
 enum class TileType {
     Empty,
     Ground,
+    FireBag
 };
 
 class Chunk {
@@ -21,6 +22,7 @@ private:
     void applyCaveAutomaton();
     static std::vector<olc::vf2d> getChunkPathInducingPoints(int chunkID);
     void generateBallMonsters();
+    void generateFireBags();
     
 public:
     Chunk(int chunkID);

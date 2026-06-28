@@ -20,7 +20,7 @@ bool Collisions::checkCollision(const Chunk &chunk, const Player &player, olc::T
 bool Collisions::checkCollision(const Chunk &chunk, const AlignedBoxCollider &collider) {
     for (int x = 0; x < Chunk::chunkSizeX; x++) {
         for (int y = 0; y < Chunk::chunkSizeY; y++) {
-            if (!chunk.getMap(x, y)) continue;
+            if (chunk.getMap(x, y) == TileType::Empty) continue;
 
             AlignedBoxCollider blockCollider = chunk.getBlockCollider(x, y);
 
@@ -56,7 +56,7 @@ float Collisions::getRayIntersection(olc::vf2d origin, olc::vf2d direction, cons
     float closestIntersection = std::numeric_limits<float>::max();
     for (int x = 0; x < Chunk::chunkSizeX; x++) {
         for (int y = 0; y < Chunk::chunkSizeY; y++) {
-            if (!chunk.getMap(x, y)) continue;
+            if (chunk.getMap(x, y) == TileType::Empty) continue;
 
             AlignedBoxCollider blockCollider = chunk.getBlockCollider(x, y);
 

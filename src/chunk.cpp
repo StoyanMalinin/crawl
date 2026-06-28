@@ -73,6 +73,7 @@ void Chunk::initialize() {
     for (int i = 0; i < 4; i++) applyCaveAutomaton();
 
     generateBallMonsters();
+    generateFireBags();
 }
 
 void Chunk::generateBallMonsters() {
@@ -100,6 +101,20 @@ void Chunk::generateBallMonsters() {
                 olc::vf2d position = chunkIDToOffset(chunkID) + olc::vf2d(float(xLeft) * blockSizeX, float(yDown) * blockSizeY);
                 ballMonsters.emplace_back(rnd.getID(), position);
                 break;
+            }
+        }
+    }
+}
+
+void Chunk::generateFireBags() {
+    Random rnd(chunkID);
+
+    for (int i = 1; i < chunkSizeY - 1; i++) {
+        for (int j = 0; j < chunkSizeX; j++) {
+            if (map[i][j] == TileType::Empty && map[i - 1][j] == TileType::Ground) {
+                if (rnd.getChance(0.1f)) {
+                    map[i][j] = TileType::FireBag;
+                }
             }
         }
     }
