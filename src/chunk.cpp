@@ -57,6 +57,13 @@ bool Chunk::getMap(int x, int y) const {
     return map[y][x];
 }
 
+olc::vi2d Chunk::positionToGrid(float x, float y) const {
+    return olc::vi2d(
+        static_cast<int>(std::floor((x - getOffset().x) / blockSizeX)),
+        static_cast<int>(std::floor((y - getOffset().y) / blockSizeY))
+    );
+}
+
 int Chunk::getChunkID() const {
     return chunkID;
 }

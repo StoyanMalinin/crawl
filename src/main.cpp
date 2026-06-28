@@ -426,16 +426,27 @@ public:
 		for (Chunk* chunk : chunks) {
 			for (int x = 0; x < Chunk::chunkSizeX; x++) {
 				for (int y = 0; y < Chunk::chunkSizeY; y++) {
-					olc::Decal *decal = chunk->getMap(x, y) ? 
-						assets.getDecal("wall-mid.png") : 
-						assets.getDecal("background.png");
+					olc::vf2d bottomLeft = chunk->getOffset() + olc::vf2d(x * Chunk::blockSizeX, y * Chunk::blockSizeY) + olc::vf2d(0, Chunk::blockSizeY); // + olc::vf2d(0, blockSizeY) to draw from bottom-left corner
+					olc::vf2d center = bottomLeft + olc::vf2d(Chunk::blockSizeX / 2.0f, -Chunk::blockSizeY / 2.0f);
+					olc::vf2d blockAboveCenter = center + olc::vf2d(0, Chunk::blockSizeY);
+
+					olc::Decal *decal = nullptr; 
+					if (!chunk->getMap(x, y)) {
+						decal = assets.getDecal("background.png");
+					} else {
+						if (!world.getWorldAt(blockAboveCenter.x, blockAboveCenter.y)) {
+							decal = assets.getDecal("wall-top.png");
+						} else {
+							decal = assets.getDecal("wall-mid.png");
+						}
+					}
+					
 					olc::vf2d scale = {
 						Chunk::blockSizeX / decal->sprite->width,
 						Chunk::blockSizeY / decal->sprite->height
 					};
-
 					tv.DrawDecal(
-						chunk->getOffset() + olc::vf2d(x * Chunk::blockSizeX, y * Chunk::blockSizeY) + olc::vf2d(0, Chunk::blockSizeY), // + olc::vf2d(0, blockSizeY) to draw from bottom-left corner
+						bottomLeft,
 						decal,
 						scale
 					);

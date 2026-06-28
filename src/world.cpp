@@ -15,7 +15,10 @@ Chunk &World::getChunkByPosition(float x, float y) {
 }
 
 bool World::getWorldAt(float x, float y) {
-    return false;
+    Chunk &chunk = getChunkByPosition(x, y);
+
+    olc::vi2d gridPos = chunk.positionToGrid(x, y);
+    return chunk.getMap(gridPos.x, gridPos.y);
 }
 
 std::vector<Chunk*> World::getRelevantChunks(float minX, float minY, float maxX, float maxY) {

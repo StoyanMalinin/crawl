@@ -24,6 +24,7 @@ public:
     Chunk& operator=(const Chunk& other);
 
     bool getMap(int x, int y) const;
+    olc::vi2d positionToGrid(float x, float y) const;
     int getChunkID() const;
     void initialize();
     olc::vf2d getOffset() const;
