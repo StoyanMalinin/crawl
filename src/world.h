@@ -11,6 +11,6 @@ public:
 
     Chunk& getChunkByID(int64_t chunkID);
     Chunk& getChunkByPosition(float x, float y);
-    bool getWorldAt(float x, float y);
+    TileType getWorldAt(float x, float y);
     std::vector<Chunk*> getRelevantChunks(float minX, float minY, float maxX, float maxY);
 };

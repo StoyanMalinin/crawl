@@ -431,10 +431,10 @@ public:
 					olc::vf2d blockAboveCenter = center + olc::vf2d(0, Chunk::blockSizeY);
 
 					olc::Decal *decal = nullptr; 
-					if (!chunk->getMap(x, y)) {
+					if (chunk->getMap(x, y) == TileType::Empty) {
 						decal = assets.getDecal("background.png");
 					} else {
-						if (!world.getWorldAt(blockAboveCenter.x, blockAboveCenter.y)) {
+						if (world.getWorldAt(blockAboveCenter.x, blockAboveCenter.y) == TileType::Empty) {
 							decal = assets.getDecal("wall-top.png");
 						} else {
 							decal = assets.getDecal("wall-mid.png");

@@ -3,10 +3,15 @@
 #include "olcPixelGameEngine.h"
 #include "ball_monster.h"
 
+enum class TileType {
+    Empty,
+    Ground,
+};
+
 class Chunk {
 private:
     int chunkID;
-    bool **map = nullptr;
+    TileType **map = nullptr;
     std::vector<BallMonster> ballMonsters;
 
 private:
@@ -23,7 +28,7 @@ public:
     Chunk(const Chunk& other);
     Chunk& operator=(const Chunk& other);
 
-    bool getMap(int x, int y) const;
+    TileType getMap(int x, int y) const;
     olc::vi2d positionToGrid(float x, float y) const;
     int getChunkID() const;
     void initialize();

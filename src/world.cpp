@@ -14,7 +14,7 @@ Chunk &World::getChunkByPosition(float x, float y) {
     return getChunkByID(chunkID);
 }
 
-bool World::getWorldAt(float x, float y) {
+TileType World::getWorldAt(float x, float y) {
     Chunk &chunk = getChunkByPosition(x, y);
 
     olc::vi2d gridPos = chunk.positionToGrid(x, y);

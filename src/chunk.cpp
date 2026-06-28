@@ -18,9 +18,9 @@ void Chunk::free() {
 void Chunk::copy(const Chunk& other) {
     chunkID = other.chunkID;
     if (other.map != nullptr) {
-        map = new bool*[chunkSizeY];
+        map = new TileType*[chunkSizeY];
         for (int i = 0; i < chunkSizeY; i++) {
-            map[i] = new bool[chunkSizeX];
+            map[i] = new TileType[chunkSizeX];
             for (int j = 0; j < chunkSizeX; j++) {
                 map[i][j] = other.map[i][j];
             }
@@ -31,9 +31,9 @@ void Chunk::copy(const Chunk& other) {
 }
 
 Chunk::Chunk(int chunkID) : chunkID(chunkID) {
-    map = new bool*[chunkSizeY];
+    map = new TileType*[chunkSizeY];
     for (int i = 0; i < chunkSizeY; i++) {
-        map[i] = new bool[chunkSizeX];
+        map[i] = new TileType[chunkSizeX];
     }
 }
 
@@ -53,7 +53,7 @@ Chunk& Chunk::operator=(const Chunk& other) {
     return *this;
 }
 
-bool Chunk::getMap(int x, int y) const {
+TileType Chunk::getMap(int x, int y) const {
     return map[y][x];
 }
 
@@ -89,7 +89,7 @@ void Chunk::generateBallMonsters() {
             
             for (int x = xLeft; x <= xLeft + xLookupOffset && x < chunkSizeX; x++) {
                 for (int y = yDown; y < yDown + yLookupOffset && y < chunkSizeY; y++) {
-                    if (map[y][x]) {
+                    if (map[y][x] == TileType::Ground) {
                         failed = true;
                         break;   
                     }
@@ -133,7 +133,7 @@ AlignedBoxCollider Chunk::getBlockCollider(int x, int y) const {
 void Chunk::debugDraw(olc::TransformedView tv) const {
     for (int x = 0; x < chunkSizeX; x++) {
         for (int y = 0; y < chunkSizeY; y++) {
-            if (map[y][x]) {
+            if (map[y][x] == TileType::Ground) {
                 AlignedBoxCollider collider = getBlockCollider(x, y);
                 collider.debugDraw(tv, olc::YELLOW);
             }
@@ -193,18 +193,18 @@ void Chunk::seedChunk() {
             
             float distRatio = minDist / potentialMaxDist;
             if (distRatio < 0.04f) {
-                map[y][x] = false;
+                map[y][x] = TileType::Empty;
             } else {
-                map[y][x] = rnd.getChance(0.7f);
+                map[y][x] = rnd.getChance(0.7f) ? TileType::Ground : TileType::Empty;
             }
         }
     }
 }
 
 void Chunk::applyCaveAutomaton() {
-    bool **newMap = new bool*[chunkSizeY];
+    TileType **newMap = new TileType*[chunkSizeY];
     for (int i = 0; i < chunkSizeY; i++)
-        newMap[i] = new bool[chunkSizeX];
+        newMap[i] = new TileType[chunkSizeX];
 
     for (int y = 0; y < chunkSizeY; y++) {
         for (int x = 0; x < chunkSizeX; x++) {
@@ -217,16 +217,16 @@ void Chunk::applyCaveAutomaton() {
                     if (nx < 0 || ny < 0 || nx >= chunkSizeX || ny >= chunkSizeY) {
                         adjacentWalls++;
                     }
-                    else if (map[ny][nx]) {
+                    else if (map[ny][nx] == TileType::Ground) {
                         adjacentWalls++;
                     }
                 }
             }
 
             if (adjacentWalls >= 5)
-                newMap[y][x] = true;
+                newMap[y][x] = TileType::Ground;
             else
-                newMap[y][x] = false;
+                newMap[y][x] = TileType::Empty;
         }
     }
 
