@@ -1,0 +1,31 @@
+#include "world.h"
+
+Chunk &World::getChunkByID(int64_t chunkID) {
+    if (chunks.find(chunkID) == chunks.end()) {
+        chunks[chunkID] = new Chunk(chunkID);
+        chunks[chunkID]->initialize();
+    }
+
+    return *chunks[chunkID];
+}
+
+Chunk &World::getChunkByPosition(float x, float y) {
+    int64_t chunkID = Chunk::yPositionToChunkID(y);
+    return getChunkByID(chunkID);
+}
+
+bool World::getWorldAt(float x, float y) {
+    return false;
+}
+
+std::vector<Chunk*> World::getRelevantChunks(float minX, float minY, float maxX, float maxY) {
+    int64_t lChunkID = Chunk::yPositionToChunkID(maxY);
+    int64_t rChunkID = Chunk::yPositionToChunkID(minY);
+
+    std::vector<Chunk*> relevantChunks;
+    for (int64_t chunkID = lChunkID; chunkID <= rChunkID; chunkID++) {
+        relevantChunks.push_back(&getChunkByID(chunkID));
+    }
+
+    return relevantChunks;
+}

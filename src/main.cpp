@@ -19,6 +19,7 @@
 #include "aligned_box_collider.h"
 #include "attack_ball.h"
 #include <set>
+#include "world.h"
 
 class Crawl : public olc::PixelGameEngine
 {
@@ -46,6 +47,8 @@ private:
 	std::set<size_t> deadBallMonsters;
 	std::map<size_t, BallMonster> ballMonsters;
 	std::map<size_t, AttackBall> attackBalls;
+
+	World world;
 public:
 	bool OnUserCreate() override {	
 		// Create UI layer - drawn above the game but below the debug layer
@@ -93,9 +96,7 @@ public:
 			attackBall.position += attackBall.dir * AttackBall::speed * elapsedTime;
 			
 			// Check collision with chunks
-			int64_t chunkID = Chunk::yPositionToChunkID(attackBall.position.y);
-			Chunk chunk(chunkID);
-			chunk.initialize();
+			Chunk &chunk = world.getChunkByPosition(attackBall.position.x, attackBall.position.y);
 			if (Collisions::checkCollision(chunk, attackBall.getCollider())) {
 				it = attackBalls.erase(it);
 				continue;
@@ -130,13 +131,9 @@ public:
 	}
 
 	void spawnBallMonsters() {
-		int64_t lChunkID = Chunk::yPositionToChunkID(worldOffset.y + worldSize.y + 10.0f);
-		int64_t rChunkID = Chunk::yPositionToChunkID(worldOffset.y - 10.0f);
-		for (int64_t chunkID = lChunkID; chunkID <= rChunkID; chunkID++) {
-			Chunk chunk(chunkID);
-			chunk.initialize();
-
-			for (const BallMonster& ballMonster : chunk.getBallMonsters()) {
+		std::vector<Chunk*> chunks = world.getRelevantChunks(worldOffset.x, worldOffset.y - 10.0f, worldOffset.x + worldSize.x, worldOffset.y + worldSize.y + 10.0f);
+		for (Chunk* chunk : chunks) {
+			for (const BallMonster& ballMonster : chunk->getBallMonsters()) {
 				if (!ballMonsters.count(ballMonster.id) && !deadBallMonsters.count(ballMonster.id)) {
 					ballMonsters[ballMonster.id] = ballMonster;
 				}
@@ -165,14 +162,8 @@ public:
 		for (auto& [id, ballMonster] : ballMonsters) {
 			// tv.DrawCircle(ballMonster.getCenter(), BallMonster::viewRange, olc::RED);
 			
-			std::vector<Chunk> monsterChunks;
-			int64_t lChunkID = Chunk::yPositionToChunkID(ballMonster.position.y + BallMonster::height + BallMonster::viewRange);
-			int64_t rChunkID = Chunk::yPositionToChunkID(ballMonster.position.y - BallMonster::viewRange);
-			for (int64_t chunkID = lChunkID; chunkID <= rChunkID; chunkID++) {
-				monsterChunks.emplace_back(chunkID);
-				monsterChunks.back().initialize();
-				// monsterChunks.back().debugDraw(tv);
-			}
+			std::vector<Chunk*> monsterChunks = world.getRelevantChunks(ballMonster.position.x, ballMonster.position.y - BallMonster::viewRange, 
+				ballMonster.position.x, ballMonster.position.y + BallMonster::height + BallMonster::viewRange);
 
 			auto checkReachable = [&](olc::vf2d origin, olc::vf2d target) {
 				olc::vf2d dir = target - origin;
@@ -185,9 +176,9 @@ public:
 				// tv.DrawLine(end1, end1 + dir, olc::WHITE);
 				// tv.DrawLine(end2, end2 + dir, olc::WHITE);
 
-				for (const Chunk& chunk : monsterChunks) {
+				for (const Chunk* chunk : monsterChunks) {
 					for (const auto &o: {origin, end1, end2}) {
-						float intersectionTime = Collisions::getRayIntersection(o, dir, chunk);
+						float intersectionTime = Collisions::getRayIntersection(o, dir, *chunk);
 						if (intersectionTime < 1.0f - 0.001f) {
 							return false; // Unreachable
 						}
@@ -310,13 +301,9 @@ public:
 		playerGoundCollider.x += 0.1f; // Add a small horizontal tolerance to allow for walking on slopes
 		playerGoundCollider.width -= 0.2f; // Reduce the width by the same amount to keep the collider centered on the player
 
-		int64_t lChunkID = Chunk::yPositionToChunkID(worldOffset.y + worldSize.y + 10.0f);
-		int64_t rChunkID = Chunk::yPositionToChunkID(worldOffset.y - 10.0f);
-		for (int64_t chunkID = lChunkID; chunkID <= rChunkID; chunkID++) {
-			Chunk chunk(chunkID);
-			chunk.initialize();
-
-			if (Collisions::checkCollision(chunk, playerGoundCollider)) {
+		std::vector<Chunk*> chunks = world.getRelevantChunks(worldOffset.x, worldOffset.y - 10.0f, worldOffset.x + worldSize.x, worldOffset.y + worldSize.y + 10.0f);
+		for (Chunk* chunk : chunks) {
+			if (Collisions::checkCollision(*chunk, playerGoundCollider)) {
 				return true;
 			}
 		}
@@ -325,21 +312,16 @@ public:
 	}
 
 	// TODO: Think about optimizations here:
-	// - Maybe introduce a "chunk cache" that stores the chunks that are currently visible, so we don't have to initialize them every frame
 	// - Maybe introduce some space partitioning structure to quickly rule out chunk blocks that are far away from the player
 	bool checkPlayerCollisions() {
-		int64_t lChunkID = Chunk::yPositionToChunkID(worldOffset.y + worldSize.y + 10.0f);
-		int64_t rChunkID = Chunk::yPositionToChunkID(worldOffset.y - 10.0f);
-		for (int64_t chunkID = lChunkID; chunkID <= rChunkID; chunkID++) {
-			Chunk chunk(chunkID);
-			chunk.initialize();
-
+		std::vector<Chunk*> chunks = world.getRelevantChunks(worldOffset.x, worldOffset.y - 10.0f, worldOffset.x + worldSize.x, worldOffset.y + worldSize.y + 10.0f);
+		for (Chunk* chunk : chunks) {
 			olc::TransformedView tv = createTransformedView();
-			if (Collisions::checkCollision(chunk, player, tv)) {
+			if (Collisions::checkCollision(*chunk, player, tv)) {
 				return true;
 			}
 		}
-
+		
 		return false;
 	}
 
@@ -439,17 +421,12 @@ public:
 		tv.DrawLineDecal(player.crosshair - olc::vf2d(0, Player::crosshairRadius), player.crosshair + olc::vf2d(0, Player::crosshairRadius), olc::RED);
 	}
 
-	void drawChunks(olc::TransformedView tv) {		
-		int64_t lChunkID = Chunk::yPositionToChunkID(worldOffset.y + worldSize.y + 10.0f);
-		int64_t rChunkID = Chunk::yPositionToChunkID(worldOffset.y - 10.0f);
-		for (int64_t chunkID = lChunkID; chunkID <= rChunkID; chunkID++) {
-			Chunk chunk(chunkID);
-			chunk.initialize();
-
-			olc::vf2d offset = Chunk::chunkIDToOffset(chunkID);
+	void drawChunks(olc::TransformedView tv) {
+		std::vector<Chunk*> chunks = world.getRelevantChunks(worldOffset.x, worldOffset.y - 10.0f, worldOffset.x + worldSize.x, worldOffset.y + worldSize.y + 10.0f);
+		for (Chunk* chunk : chunks) {
 			for (int x = 0; x < Chunk::chunkSizeX; x++) {
 				for (int y = 0; y < Chunk::chunkSizeY; y++) {
-					olc::Decal *decal = chunk.getMap(x, y) ? 
+					olc::Decal *decal = chunk->getMap(x, y) ? 
 						assets.getDecal("wall-mid.png") : 
 						assets.getDecal("background.png");
 					olc::vf2d scale = {
@@ -458,7 +435,7 @@ public:
 					};
 
 					tv.DrawDecal(
-						offset + olc::vf2d(x * Chunk::blockSizeX, y * Chunk::blockSizeY) + olc::vf2d(0, Chunk::blockSizeY), // + olc::vf2d(0, blockSizeY) to draw from bottom-left corner
+						chunk->getOffset() + olc::vf2d(x * Chunk::blockSizeX, y * Chunk::blockSizeY) + olc::vf2d(0, Chunk::blockSizeY), // + olc::vf2d(0, blockSizeY) to draw from bottom-left corner
 						decal,
 						scale
 					);
