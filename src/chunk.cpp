@@ -205,6 +205,16 @@ AlignedBoxCollider Chunk::getBlockCollider(int x, int y) const {
     );
 }
 
+AlignedBoxCollider Chunk::getCollider() const {
+    olc::vf2d offset = chunkIDToOffset(chunkID);
+    return AlignedBoxCollider(
+        offset.x,
+        offset.y,
+        chunkWidth,
+        chunkHeight
+    );
+}
+
 void Chunk::debugDraw(olc::TransformedView tv) const {
     for (int x = 0; x < chunkSizeX; x++) {
         for (int y = 0; y < chunkSizeY; y++) {

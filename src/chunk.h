@@ -45,6 +45,7 @@ public:
     static int64_t yPositionToChunkID(float yPos);
     const std::vector<BallMonster>& getBallMonsters() const;
     AlignedBoxCollider getBlockCollider(int x, int y) const;
+    AlignedBoxCollider getCollider() const;
     void debugDraw(olc::TransformedView tv) const;
 
     void ignite(int x, int y);
@@ -59,5 +60,5 @@ public:
 	static constexpr float blockSizeX = chunkWidth / float(chunkSizeX);
 	static constexpr float blockSizeY = chunkHeight / float(chunkSizeY);
     static constexpr float minBurningTime = 2.0f, maxBurningTime = 4.0f; // seconds
-    static constexpr float fireParticlesPerSecond = 100.0f;
+    static constexpr float fireParticlesPerSecond = 500.0f;
 };

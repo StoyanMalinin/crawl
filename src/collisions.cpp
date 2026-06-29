@@ -24,8 +24,18 @@ bool Collisions::checkCollision(const Chunk &chunk, const AlignedBoxCollider &co
 }
 
 olc::vi2d Collisions::getCollision(const Chunk &chunk, const AlignedBoxCollider &collider) {
-    for (int x = 0; x < Chunk::chunkSizeX; x++) {
-        for (int y = 0; y < Chunk::chunkSizeY; y++) {
+    if (!checkCollision(chunk.getCollider(), collider)) {
+        return {-1, -1};
+    }
+
+    int startX = std::max(0, static_cast<int>((collider.x - chunk.getOffset().x) / Chunk::blockSizeX));
+    int endX = std::min(chunk.chunkSizeX - 1, static_cast<int>((collider.x + collider.width - chunk.getOffset().x) / Chunk::blockSizeX));
+
+    int startY = std::max(0, static_cast<int>((collider.y - chunk.getOffset().y) / Chunk::blockSizeY));
+    int endY = std::min(chunk.chunkSizeY - 1, static_cast<int>((collider.y + collider.height - chunk.getOffset().y) / Chunk::blockSizeY));
+
+    for (int x = startX; x <= endX; x++) {
+        for (int y = startY; y <= endY; y++) {
             if (chunk.getMap(x, y) == TileType::Empty) continue;
 
             AlignedBoxCollider blockCollider = chunk.getBlockCollider(x, y);
