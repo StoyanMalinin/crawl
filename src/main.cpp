@@ -105,8 +105,39 @@ public:
 			chunk->addParticlesToFireBuffer(elapsedTime, fireBuffer);
 		}
 		
-		// Handle collisions
+		// Handle collisions with player
 		std::list<int>& takenIndices = fireBuffer.getTakenIndices();
+		for (auto id = takenIndices.begin(); id != takenIndices.end(); ) {
+			auto nextID = std::next(id);
+
+			FireParticle particle = fireBuffer.getParticle(id);
+			if (Collisions::checkCollision(player.getCollider(), particle.getCollider())) {
+				player.takeDamage(1.0f);
+				fireBuffer.removeParticle(id);
+			}
+
+			id = nextID;
+		}
+
+		// Handle collisions with ball monsters
+		takenIndices = fireBuffer.getTakenIndices();
+		for (auto id = takenIndices.begin(); id != takenIndices.end(); ) {
+			auto nextID = std::next(id);
+
+			FireParticle particle = fireBuffer.getParticle(id);
+			for (auto& [monsterID, ballMonster] : ballMonsters) {
+				if (Collisions::checkCollision(ballMonster.getCollider(), particle.getCollider())) {
+					ballMonster.health -= 0.1f;
+					fireBuffer.removeParticle(id);
+					break;
+				}
+			}
+
+			id = nextID;
+		}
+
+		// Handle collisions with map
+		takenIndices = fireBuffer.getTakenIndices();
 		for (auto id = takenIndices.begin(); id != takenIndices.end(); ) {
 			auto nextID = std::next(id);
 
