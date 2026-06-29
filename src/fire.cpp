@@ -41,6 +41,7 @@ FireParticle FireBuffer::getParticle(FireParticleID id) {
 
 void FireBuffer::moveParticles(float elapsedTime) {
     for (int index : takenIndices) {
+        particles[index].velocity += olc::vf2d(0.0f, 5.0f) * elapsedTime; // hot air going up
         particles[index].position += particles[index].velocity * elapsedTime;
         particles[index].lifetime -= elapsedTime;
     }
