@@ -2,6 +2,7 @@
 
 #include "olcPixelGameEngine.h"
 #include "aligned_box_collider.h"
+#include "tile_type.h"
 
 class AttackBall {
 public:
@@ -16,4 +17,6 @@ public:
     AttackBall(olc::vf2d position, olc::vf2d dir);
 
     AlignedBoxCollider getCollider() const;
+
+    static constexpr uint64_t collisionMask = (1ULL << uint64_t(TileType::Ground)) | (1ULL << uint64_t(TileType::FireBag));
 };

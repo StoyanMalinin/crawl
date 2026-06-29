@@ -3,6 +3,7 @@
 #include <list>
 #include "collisions.h"
 #include "olcPixelGameEngine.h"
+#include "tile_type.h"
 
 struct FireParticle {
     olc::vf2d position;
@@ -20,6 +21,8 @@ struct FireParticle {
     AlignedBoxCollider getCollider() const {
         return AlignedBoxCollider(position.x, position.y, size, size);
     }
+
+    static constexpr uint64_t collisionMask = (1ULL << uint64_t(TileType::Ground)) | (1ULL << uint64_t(TileType::FireBag)) | (1ULL << uint64_t(TileType::TreeOrigin)) | (1ULL << uint64_t(TileType::Tree));
 };
 
 using FireParticleID = std::list<int>::iterator;

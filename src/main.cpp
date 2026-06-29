@@ -146,12 +146,12 @@ public:
 
 			std::vector<Chunk*> chunks = world.getRelevantChunks(collider.x, collider.y, collider.x + collider.width, collider.y + collider.height);
 			for (Chunk* chunk : chunks) {
-				if (Collisions::checkCollision(*chunk, collider)) { // collision => the particle will disappear
+				if (Collisions::checkCollision(*chunk, collider, FireParticle::collisionMask)) { // collision => the particle will disappear
 					fireBuffer.removeParticle(id);
 					
-					olc::vi2d collisionGridPos = Collisions::getCollision(*chunk, collider);
+					olc::vi2d collisionGridPos = Collisions::getCollision(*chunk, collider, FireParticle::collisionMask);
 					TileType tileType = chunk->getMap(collisionGridPos.x, collisionGridPos.y);
-					if (tileType == TileType::FireBag) {
+					if (tileType == TileType::FireBag || tileType == TileType::TreeOrigin || tileType == TileType::Tree) {
 						// TODO: make this probabilistic
 						chunk->ignite(collisionGridPos.x, collisionGridPos.y);
 					}
@@ -179,8 +179,8 @@ public:
 			
 			// Check collision with chunks
 			Chunk &chunk = world.getChunkByPosition(attackBall.position.x, attackBall.position.y);
-			if (Collisions::checkCollision(chunk, attackBall.getCollider())) {
-				olc::vi2d collisionGridPos = Collisions::getCollision(chunk, attackBall.getCollider());
+			if (Collisions::checkCollision(chunk, attackBall.getCollider(), AttackBall::collisionMask)) {
+				olc::vi2d collisionGridPos = Collisions::getCollision(chunk, attackBall.getCollider(), AttackBall::collisionMask);
 				TileType tileType = chunk.getMap(collisionGridPos.x, collisionGridPos.y);
 				if (tileType == TileType::FireBag) {
 					chunk.ignite(collisionGridPos.x, collisionGridPos.y);
@@ -390,7 +390,7 @@ public:
 
 		std::vector<Chunk*> chunks = world.getRelevantChunks(worldOffset.x, worldOffset.y - 10.0f, worldOffset.x + worldSize.x, worldOffset.y + worldSize.y + 10.0f);
 		for (Chunk* chunk : chunks) {
-			if (Collisions::checkCollision(*chunk, playerGoundCollider)) {
+			if (Collisions::checkCollision(*chunk, playerGoundCollider, Player::collisionMask)) {
 				return true;
 			}
 		}
@@ -579,7 +579,9 @@ public:
 					} else if (chunk->getMap(x, y) == TileType::FireBag) {
 						drawDecal(assets.getDecal("fire-bag.png"), chunk->isIgnitedAt(x, y) ? olc::RED : olc::WHITE);
 					} else if (chunk->getMap(x, y) == TileType::TreeOrigin) {
-						drawDecal(assets.getDecal("tree.png"), olc::WHITE, {Chunk::treeWidht, Chunk::treeHeight}, {0.0f, (Chunk::treeHeight - 1) * Chunk::blockSizeY});
+						drawDecal(assets.getDecal("tree.png"), 
+							chunk->isIgnitedAt(x, y) ? olc::RED : olc::WHITE, 
+							{Chunk::treeWidht, Chunk::treeHeight}, {0.0f, (Chunk::treeHeight - 1) * Chunk::blockSizeY});
 					} else if (chunk->getMap(x, y) == TileType::Tree) {
 						// Do nothing, as the tree is drawn from the origin
 					}

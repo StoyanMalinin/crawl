@@ -4,15 +4,7 @@
 #include "ball_monster.h"
 #include "fire.h"
 #include "collisions.h"
-
-enum class TileType {
-    Invalid,
-    Empty,
-    Ground,
-    FireBag,
-    TreeOrigin,
-    Tree,
-};
+#include "tile_type.h"
 
 class Chunk {
 private:

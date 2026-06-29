@@ -2,6 +2,7 @@
 
 #include "aligned_box_collider.h"
 #include "olcPixelGameEngine.h"
+#include "tile_type.h"
 
 class Player {
 public:
@@ -29,4 +30,6 @@ public:
     void takeDamage(float damage);
     bool isStunned() const;
     void takeFallDamage(float distance);
+
+    static constexpr uint64_t collisionMask = (1ULL << uint64_t(TileType::Ground));
 };

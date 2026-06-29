@@ -68,8 +68,23 @@ TileType Chunk::getMap(int x, int y) const {
     return map[y][x];
 }
 
+float tileTypeToIgniteChance(TileType tileType) {
+    switch (tileType) {
+        case TileType::FireBag:
+            return 0.8f;
+        case TileType::Tree:
+        case TileType::TreeOrigin:
+            return 0.5f;
+        default:
+            return 0.0f; // Other types do not ignite
+    }
+}
+
 void Chunk::ignite(int x, int y) {
-    if (!isIgnited[y][x]) {
+    if (isIgnited[y][x]) return;
+
+    float igniteChance = tileTypeToIgniteChance(map[y][x]);
+    if (Random::instance().getChance(igniteChance)) {
         isIgnited[y][x] = true;
         burningTime[y][x] = Random::instance().getFloat(minBurningTime, maxBurningTime);
     }

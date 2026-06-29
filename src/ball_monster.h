@@ -2,6 +2,7 @@
 
 #include "olcPixelGameEngine.h"
 #include "aligned_box_collider.h"
+#include "tile_type.h"
 
 class BallMonster {
 public:
@@ -26,4 +27,6 @@ public:
     AlignedBoxCollider getCollider() const;
     olc::vf2d getCenter() const;
     void moveBy(olc::vf2d delta);
+
+    static constexpr uint64_t collisionMask =  (1ULL << uint64_t(TileType::Ground));
 };

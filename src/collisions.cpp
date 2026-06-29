@@ -15,15 +15,15 @@ bool Collisions::checkCollision(const AlignedBoxCollider &a, const AlignedBoxCol
 
 bool Collisions::checkCollision(const Chunk &chunk, const Player &player, olc::TransformedView tv) {
     const AlignedBoxCollider playerCollider = player.getCollider();
-    return checkCollision(chunk, playerCollider);
+    return checkCollision(chunk, playerCollider, Player::collisionMask);
 }
 
-bool Collisions::checkCollision(const Chunk &chunk, const AlignedBoxCollider &collider) {
-    olc::vi2d collisionGridPos = getCollision(chunk, collider);
+bool Collisions::checkCollision(const Chunk &chunk, const AlignedBoxCollider &collider, uint64_t collisionMask) {
+    olc::vi2d collisionGridPos = getCollision(chunk, collider, collisionMask);
     return collisionGridPos.x != -1;
 }
 
-olc::vi2d Collisions::getCollision(const Chunk &chunk, const AlignedBoxCollider &collider) {
+olc::vi2d Collisions::getCollision(const Chunk &chunk, const AlignedBoxCollider &collider, uint64_t collisionMask) {
     if (!checkCollision(chunk.getCollider(), collider)) {
         return {-1, -1};
     }
@@ -36,7 +36,8 @@ olc::vi2d Collisions::getCollision(const Chunk &chunk, const AlignedBoxCollider 
 
     for (int x = startX; x <= endX; x++) {
         for (int y = startY; y <= endY; y++) {
-            if (chunk.getMap(x, y) == TileType::Empty) continue;
+            TileType tileType = chunk.getMap(x, y);
+            if (((collisionMask >> uint64_t(tileType)) & 1) == 0) continue;
 
             AlignedBoxCollider blockCollider = chunk.getBlockCollider(x, y);
 
