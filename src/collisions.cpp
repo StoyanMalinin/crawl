@@ -3,6 +3,7 @@
 #include "olcPGEX_TransformedView.h"
 
 #include <string>
+#include "chunk.h"
 
 bool Collisions::checkCollision(const AlignedBoxCollider &a, const AlignedBoxCollider &b) {
     // Collision happens if projections overlap on BOTH axes

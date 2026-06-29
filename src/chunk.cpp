@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <array>
 #include "olcPixelGameEngine.h"
+#include <random>
 
 void Chunk::free() {
     if (map != nullptr) {
@@ -82,6 +83,34 @@ void Chunk::updateBurning(float elapsedTime) {
                 if (burningTime[y][x] <= 0.0f) {
                     isIgnited[y][x] = false;
                     map[y][x] = TileType::Empty;
+                }
+            }
+        }
+    }
+}
+
+void Chunk::addParticlesToFireBuffer(float elapsedTime, FireBuffer &fireBuffer) const {
+    auto velocityDistribution = std::normal_distribution<float>(std::numbers::pi / 2.0f, 1.0f);
+    int totalParticlesToAdd = static_cast<int>(fireParticlesPerSecond * elapsedTime);
+    
+    for (int x = 0; x < chunkSizeX; x++) {
+        for (int y = 0; y < chunkSizeY; y++) {
+            if (isIgnited[y][x]) {
+                for (int i = 0; i < totalParticlesToAdd; i++) {
+                    FireParticle particle;
+                    particle.position = olc::vf2d(
+                        chunkIDToOffset(chunkID).x + x * blockSizeX + Random::instance().getFloat(0.0f, blockSizeX),
+                        chunkIDToOffset(chunkID).y + y * blockSizeY + Random::instance().getFloat(0.0f, blockSizeY)
+                    );
+                    float angle = velocityDistribution(Random::instance().getUnderlyingGenerator());
+                    particle.velocity = olc::vf2d(std::cos(angle), std::sin(angle)) * Random::instance().getFloat(0.5f, 2.0f);
+                    particle.lifetime = Random::instance().getFloat(0.5f, 2.0f);
+                    particle.size = Random::instance().getFloat(0.1f, 0.3f);
+                                        
+                    // Hack: preemptively move the particle to avoid it being added and immediately removed in the same frame due to collision with the source
+                    particle.position += particle.velocity * Random::instance().getFloat(blockSizeX / 2.0f, 2.0f * blockSizeX);
+                    
+                    fireBuffer.addParticle(particle);
                 }
             }
         }

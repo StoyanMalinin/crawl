@@ -16,5 +16,7 @@ public:
     float getFloat(float min, float max);
     size_t getID();
 
+    std::mt19937_64& getUnderlyingGenerator();
+
     static Random& instance();
 };

@@ -2,6 +2,8 @@
 
 #include "olcPixelGameEngine.h"
 #include "ball_monster.h"
+#include "fire.h"
+#include "collisions.h"
 
 enum class TileType {
     Invalid,
@@ -48,6 +50,7 @@ public:
     void ignite(int x, int y);
     bool isIgnitedAt(int x, int y) const;
     void updateBurning(float elapsedTime);
+    void addParticlesToFireBuffer(float elapsedTime, FireBuffer& fireBuffer) const;
 
 public:
 	static constexpr int chunkSizeX = 60, chunkSizeY = 30; 
@@ -56,4 +59,5 @@ public:
 	static constexpr float blockSizeX = chunkWidth / float(chunkSizeX);
 	static constexpr float blockSizeY = chunkHeight / float(chunkSizeY);
     static constexpr float minBurningTime = 2.0f, maxBurningTime = 4.0f; // seconds
+    static constexpr float fireParticlesPerSecond = 100.0f;
 };

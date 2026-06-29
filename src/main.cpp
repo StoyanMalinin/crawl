@@ -20,6 +20,7 @@
 #include "attack_ball.h"
 #include <set>
 #include "world.h"
+#include "fire.h"
 
 class Crawl : public olc::PixelGameEngine
 {
@@ -49,6 +50,8 @@ private:
 	std::map<size_t, AttackBall> attackBalls;
 
 	World world;
+
+	FireBuffer fireBuffer = FireBuffer(10 * 1000);
 public:
 	bool OnUserCreate() override {	
 		// Create UI layer - drawn above the game but below the debug layer
@@ -85,10 +88,50 @@ public:
 		// Camera follows the player, so we need to update the world offset based on the player's position
 		worldOffset.y = player.position.y - worldSize.y / 2.0f;
 
+		updateFire(elapsedTime);
 		updateChunks(elapsedTime);
 		updatePlayer(elapsedTime);
 		updateAttackBalls(elapsedTime);
 		updateBallMonsters(elapsedTime);
+	}
+
+	void updateFire(float elapsedTime) {
+		// Move
+		fireBuffer.moveParticles(elapsedTime);
+
+		// Add new
+		std::vector<Chunk*> chunks = world.getRelevantChunks(worldOffset.x, worldOffset.y - 10.0f, worldOffset.x + worldSize.x, worldOffset.y + worldSize.y + 10.0f);
+		for (Chunk *chunk: chunks) {
+			chunk->addParticlesToFireBuffer(elapsedTime, fireBuffer);
+		}
+		
+		// Handle collisions
+		std::list<int>& takenIndices = fireBuffer.getTakenIndices();
+		for (auto id = takenIndices.begin(); id != takenIndices.end(); ) {
+			auto nextID = std::next(id);
+
+			FireParticle particle = fireBuffer.getParticle(id);
+			AlignedBoxCollider collider = particle.getCollider();
+
+			std::vector<Chunk*> chunks = world.getRelevantChunks(collider.x, collider.y, collider.x + collider.width, collider.y + collider.height);
+			for (Chunk* chunk : chunks) {
+				if (Collisions::checkCollision(*chunk, collider)) { // collision => the particle will disappear
+					fireBuffer.removeParticle(id);
+					
+					olc::vi2d collisionGridPos = Collisions::getCollision(*chunk, collider);
+					TileType tileType = chunk->getMap(collisionGridPos.x, collisionGridPos.y);
+					if (tileType == TileType::FireBag) {
+						// TODO: make this probabilistic
+						chunk->ignite(collisionGridPos.x, collisionGridPos.y);
+					}
+					
+
+					break;
+				}
+			}
+
+			id = nextID;
+		}
 	}
 
 	void updateChunks(float elapsedTime) {
@@ -380,6 +423,19 @@ public:
 		drawPlayer(tv);
 		drawAttackBalls(tv);
 		drawBallMonsters(tv);
+		drawFire(tv);
+	}
+
+	void drawFire(olc::TransformedView tv) {
+		std::list<int>& takenIndices = fireBuffer.getTakenIndices();
+		for (auto id = takenIndices.begin(); id != takenIndices.end(); ++id) {
+			FireParticle particle = fireBuffer.getParticle(id);
+			olc::Pixel color = particle.getColor();
+			olc::vf2d position = particle.position;
+			olc::vf2d size = {particle.size, particle.size};
+
+			tv.FillRectDecal(position, size, color);
+		}
 	}
 
 	void drawAttackBalls(olc::TransformedView tv) {

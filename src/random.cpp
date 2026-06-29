@@ -26,6 +26,10 @@ size_t Random::getID() {
     return rnd();
 }
 
+std::mt19937_64& Random::getUnderlyingGenerator() {
+    return rnd;
+}
+
 Random &Random::instance() {
     static Random instance;
     return instance;

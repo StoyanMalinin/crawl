@@ -1,11 +1,12 @@
 #pragma once
 
 #include "aligned_box_collider.h"
-#include "chunk.h"
 #include "player.h"
 
 #include "olcPixelGameEngine.h"
 #include "olcPGEX_TransformedView.h"
+
+class Chunk;
 
 class Collisions {
 public:
