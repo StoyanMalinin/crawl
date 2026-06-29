@@ -61,6 +61,10 @@ Chunk& Chunk::operator=(const Chunk& other) {
 }
 
 TileType Chunk::getMap(int x, int y) const {
+    if (x < 0 || x >= chunkSizeX || y < 0 || y >= chunkSizeY) {
+        return TileType::Invalid;
+    }
+
     return map[y][x];
 }
 
@@ -134,6 +138,7 @@ void Chunk::initialize() {
 
     generateBallMonsters();
     generateFireBags();
+    generateTrees();
 }
 
 void Chunk::generateBallMonsters() {
@@ -169,11 +174,41 @@ void Chunk::generateBallMonsters() {
 void Chunk::generateFireBags() {
     Random rnd(chunkID);
 
-    for (int i = 1; i < chunkSizeY - 1; i++) {
-        for (int j = 0; j < chunkSizeX; j++) {
-            if (map[i][j] == TileType::Empty && map[i - 1][j] == TileType::Ground) {
+    for (int y = 1; y < chunkSizeY - 1; y++) {
+        for (int x = 0; x < chunkSizeX; x++) {
+            if (map[y][x] == TileType::Empty && map[y - 1][x] == TileType::Ground) {
                 if (rnd.getChance(0.1f)) {
-                    map[i][j] = TileType::FireBag;
+                    map[y][x] = TileType::FireBag;
+                }
+            }
+        }
+    }
+}
+
+bool Chunk::checkRectContent(int x, int y, int width, int height, TileType type) {
+    for (int i = x; i < x + width; i++) {
+        for (int j = y; j < y + height; j++) {
+            if (getMap(i, j) != type) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+void Chunk::generateTrees() {
+    Random rnd(chunkID);
+
+    for (int y = 0; y < chunkSizeY; y++) {
+        for (int x = 0; x < chunkSizeX; x++) {
+            if (checkRectContent(x, y, treeWidht, treeHeight, TileType::Empty) && checkRectContent(x, y - 1, treeWidht, 1, TileType::Ground)) {
+                if (rnd.getChance(0.1f)) {
+                    for (int i = 0; i < treeWidht; i++) {
+                        for (int j = 0; j < treeHeight; j++) {
+                            map[y + j][x + i] = TileType::Tree;
+                        }
+                    }
+                    map[y][x] = TileType::TreeOrigin;
                 }
             }
         }

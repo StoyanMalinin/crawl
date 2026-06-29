@@ -244,9 +244,6 @@ public:
 			playerAuraPoints.push_back(player.getCenter() + olc::vf2d(std::cos(angle), std::sin(angle)) * BallMonster::playerAuraRadius);
 			playerAuraPoints.push_back(player.getCenter() + olc::vf2d(std::cos(angle), std::sin(angle)) * BallMonster::playerAuraRadius / 2);
 		}
-		// for (const auto& p: playerAuraPoints) {
-		// 		tv.FillCircle(p, 0.1f, olc::GREEN);
-		// }
 
 		// Move existing ball monsters
 		for (auto& [id, ballMonster] : ballMonsters) {
@@ -530,17 +527,40 @@ public:
 			for (int x = 0; x < Chunk::chunkSizeX; x++) {
 				for (int y = 0; y < Chunk::chunkSizeY; y++) {
 					olc::vf2d bottomLeft = chunk->getOffset() + olc::vf2d(x * Chunk::blockSizeX, y * Chunk::blockSizeY) + olc::vf2d(0, Chunk::blockSizeY); // + olc::vf2d(0, blockSizeY) to draw from bottom-left corner
-					olc::vf2d center = bottomLeft + olc::vf2d(Chunk::blockSizeX / 2.0f, -Chunk::blockSizeY / 2.0f);
-					olc::vf2d blockAboveCenter = center + olc::vf2d(0, Chunk::blockSizeY);
-
+					
 					auto drawDecal = [&](olc::Decal *decal, olc::Pixel tint = olc::WHITE) {
 						olc::vf2d scale = {
 							Chunk::blockSizeX / decal->sprite->width,
-							Chunk::blockSizeY / decal->sprite->height
+							Chunk::blockSizeY / decal->sprite->height	
 						};
 
 						tv.DrawDecal(
 							bottomLeft,
+							decal,
+							scale
+						);
+					};
+
+					if (chunk->getMap(x, y) == TileType::FireBag || chunk->getMap(x, y) == TileType::Tree || chunk->getMap(x, y) == TileType::TreeOrigin) {
+						drawDecal(assets.getDecal("background.png"));
+					}
+				}
+			}
+			
+			for (int x = 0; x < Chunk::chunkSizeX; x++) {
+				for (int y = 0; y < Chunk::chunkSizeY; y++) {
+					olc::vf2d bottomLeft = chunk->getOffset() + olc::vf2d(x * Chunk::blockSizeX, y * Chunk::blockSizeY) + olc::vf2d(0, Chunk::blockSizeY); // + olc::vf2d(0, blockSizeY) to draw from bottom-left corner
+					olc::vf2d center = bottomLeft + olc::vf2d(Chunk::blockSizeX / 2.0f, -Chunk::blockSizeY / 2.0f);
+					olc::vf2d blockAboveCenter = center + olc::vf2d(0, Chunk::blockSizeY);
+
+					auto drawDecal = [&](olc::Decal *decal, olc::Pixel tint = olc::WHITE, olc::vf2d customScale = {1.0f, 1.0f}, olc::vf2d customOffset = {0.0f, 0.0f}) {
+						olc::vf2d scale = {
+							Chunk::blockSizeX / decal->sprite->width * customScale.x,
+							Chunk::blockSizeY / decal->sprite->height * customScale.y	
+						};
+
+						tv.DrawDecal(
+							bottomLeft + customOffset,
 							decal,
 							scale, 
 							tint
@@ -557,8 +577,11 @@ public:
 							drawDecal(assets.getDecal("wall-mid.png"));
 						}
 					} else if (chunk->getMap(x, y) == TileType::FireBag) {
-						drawDecal(assets.getDecal("background.png"), chunk->isIgnitedAt(x, y) ? olc::RED : olc::WHITE);
-						drawDecal(assets.getDecal("fire-bag.png"));
+						drawDecal(assets.getDecal("fire-bag.png"), chunk->isIgnitedAt(x, y) ? olc::RED : olc::WHITE);
+					} else if (chunk->getMap(x, y) == TileType::TreeOrigin) {
+						drawDecal(assets.getDecal("tree.png"), olc::WHITE, {Chunk::treeWidht, Chunk::treeHeight}, {0.0f, (Chunk::treeHeight - 1) * Chunk::blockSizeY});
+					} else if (chunk->getMap(x, y) == TileType::Tree) {
+						// Do nothing, as the tree is drawn from the origin
 					}
 				}
 			}

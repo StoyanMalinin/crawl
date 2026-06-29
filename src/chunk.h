@@ -9,7 +9,9 @@ enum class TileType {
     Invalid,
     Empty,
     Ground,
-    FireBag
+    FireBag,
+    TreeOrigin,
+    Tree,
 };
 
 class Chunk {
@@ -29,6 +31,8 @@ private:
     static std::vector<olc::vf2d> getChunkPathInducingPoints(int chunkID);
     void generateBallMonsters();
     void generateFireBags();
+    void generateTrees();
+    bool checkRectContent(int x, int y, int width, int height, TileType type);
     
 public:
     Chunk(int chunkID);
@@ -61,4 +65,5 @@ public:
 	static constexpr float blockSizeY = chunkHeight / float(chunkSizeY);
     static constexpr float minBurningTime = 2.0f, maxBurningTime = 4.0f; // seconds
     static constexpr float fireParticlesPerSecond = 500.0f;
+    static constexpr int treeWidht = 2, treeHeight = 4;
 };
